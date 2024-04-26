@@ -1,7 +1,5 @@
 package com.example.springmigrate.service.implementation;
 
-import com.example.springmigrate.dto.ContentNodeDto;
-import com.example.springmigrate.dto.DirectoryFilterNodeDto;
 import com.example.springmigrate.dto.DirectoryNodeDto;
 import com.example.springmigrate.repository.IDirectoryRepository;
 import com.example.springmigrate.service.IDirectoryLogicalService;
@@ -98,6 +96,12 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
 //        }
     }
 
+    /**
+     * Create directory
+     *
+     * @param directory directory node with id null
+     * @return list of directories created, otherwise {@code null}
+     */
     @Override
     public DirectoryNodeDto createDirectory(DirectoryNodeDto directory) throws IOException {
         List<DirectoryNodeDto> directories = repository.createDirectory(directory);
@@ -109,6 +113,17 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
         return directories.get(directories.size() - 1);
     }
 
+    /**
+     * Update a directory
+     *
+     * <ul>
+     *     <li>If directory is leaf, pathBase must be {@code null}</li>
+     *     <li>If directory is node, parentDirectoryId must be {@code null}</li>
+     * </ul>
+     *
+     * @param directory directory
+     * @return directory if updated, otherwise {@code null}
+     */
     @Override
     public DirectoryNodeDto updateDirectory(DirectoryNodeDto directory) throws IOException {
         return repository.updateDirectory(directory);

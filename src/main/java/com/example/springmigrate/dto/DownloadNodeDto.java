@@ -2,12 +2,10 @@ package com.example.springmigrate.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -16,7 +14,7 @@ public class DownloadNodeDto {
     private String authority;
     private ContentNodeDto content;
     private Integer defaultPort;
-    private DeserializedFieldsNodeDto deserializedFields;
+    //private DeserializedFieldsNodeDto deserializedFields;
     private String file;
     private String host;
     private String path;
