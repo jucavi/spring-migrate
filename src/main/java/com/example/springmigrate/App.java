@@ -27,8 +27,8 @@ public class App implements CommandLineRunner {
 				"\n                                WARNING!!!" +
 				"\n***********************************************************************************" +
 				"\n***********************************************************************************" +
-				"\n    La ejecución de la aplicación puede producir daños en la base de datos." +
-				"\n   Antes de lanzar el script recuerde hacer una copia de seguridad de la misma." +
+				"\n    La ejecución de la aplicación puede producir daños en la base de datos," +
+				"\n   antes de lanzar el script recuerde hacer una copia de seguridad de la misma." +
 				"\n***********************************************************************************" +
 				"\n\nAún así desea ejecutar la aplicación S/n: ");
 
