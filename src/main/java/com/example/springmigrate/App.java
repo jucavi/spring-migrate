@@ -1,5 +1,6 @@
 package com.example.springmigrate;
 
+import com.example.springmigrate.service.implementation.DirectoryLogicalServiceImpl;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,6 +9,12 @@ import java.util.Scanner;
 
 @SpringBootApplication
 public class App implements CommandLineRunner {
+
+	private static DirectoryLogicalServiceImpl directoryLogicalService;
+
+	public App(DirectoryLogicalServiceImpl directoryLogicalService) {
+		App.directoryLogicalService = directoryLogicalService;
+	}
 
 	public static void main(String[] args) {
 		SpringApplication.run(App.class, args);
