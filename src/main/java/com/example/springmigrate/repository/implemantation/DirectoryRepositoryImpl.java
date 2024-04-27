@@ -14,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 public class DirectoryRepositoryImpl  implements IDirectoryRepository {
 
-    private final ApiDirectoryHttpClientImpl DirectoryHttpClient;
+    private final ApiDirectoryHttpClientImpl directoryHttpClient;
 
 
     /**
@@ -24,7 +24,7 @@ public class DirectoryRepositoryImpl  implements IDirectoryRepository {
      */
     @Override
     public List<DirectoryNodeDto> findAll() throws IOException {
-        return  DirectoryHttpClient.apiFindDirectories();
+        return  directoryHttpClient.apiFindDirectories();
     }
 
 
@@ -36,7 +36,7 @@ public class DirectoryRepositoryImpl  implements IDirectoryRepository {
      */
     @Override
     public List<DirectoryNodeDto> createDirectory(DirectoryNodeDto directory) throws IOException {
-        return DirectoryHttpClient.apiCreateDirectoryHierarchicallyPhysical(directory);
+        return directoryHttpClient.apiCreateDirectoryHierarchicallyPhysical(directory);
     }
 
 
@@ -48,7 +48,7 @@ public class DirectoryRepositoryImpl  implements IDirectoryRepository {
      */
     @Override
     public DirectoryNodeDto findDirectoryById(String uuid) throws IOException {
-        return DirectoryHttpClient.apiFindDirectoryById(uuid);
+        return directoryHttpClient.apiFindDirectoryById(uuid);
     }
 
 
@@ -65,7 +65,7 @@ public class DirectoryRepositoryImpl  implements IDirectoryRepository {
      */
     @Override
     public DirectoryNodeDto updateDirectory(DirectoryNodeDto directory) throws IOException {
-        return DirectoryHttpClient.apiUpdateDirectory(directory.getId(), directory);
+        return directoryHttpClient.apiUpdateDirectory(directory.getId(), directory);
     }
 
 
@@ -77,7 +77,7 @@ public class DirectoryRepositoryImpl  implements IDirectoryRepository {
      */
     @Override
     public List<DirectoryNodeDto> findAllDirectoriesByFilter(List<DirectoryFilterNodeDto> directories) throws IOException {
-        return DirectoryHttpClient.apiSearchAllDirectoriesByFilter(directories);
+        return directoryHttpClient.apiSearchAllDirectoriesByFilter(directories);
     }
 
 
@@ -89,7 +89,7 @@ public class DirectoryRepositoryImpl  implements IDirectoryRepository {
      */
     @Override
     public List<DirectoryNodeDto> findDirectoryByFilter(List<DirectoryFilterNodeDto> directories) throws IOException {
-        return DirectoryHttpClient.apiSearchDirectoryByFilter(directories);
+        return directoryHttpClient.apiSearchDirectoryByFilter(directories);
     }
 
     /**
@@ -99,6 +99,6 @@ public class DirectoryRepositoryImpl  implements IDirectoryRepository {
      */
     @Override
     public void deleteDirectory(String uuid) throws IOException {
-        DirectoryHttpClient.apiDeleteDirectoryById(uuid);
+        directoryHttpClient.apiDeleteDirectoryById(uuid);
     }
 }
