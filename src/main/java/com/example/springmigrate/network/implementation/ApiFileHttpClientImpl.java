@@ -4,6 +4,8 @@ import com.example.springmigrate.config.utils.RetrofitClient;
 import com.example.springmigrate.dto.FileNodeDto;
 import com.example.springmigrate.network.IFileHttpClient;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -12,13 +14,12 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
-@AllArgsConstructor
 public class ApiFileHttpClientImpl {
 
-    private final IFileHttpClient httpClient;
+    private IFileHttpClient httpClient;
 
-    public ApiFileHttpClientImpl() {
-        httpClient = RetrofitClient.getInstance()
+    public ApiFileHttpClientImpl(RetrofitClient retrofitClient) {
+        httpClient = retrofitClient.getInstance()
                 .create(IFileHttpClient.class);
     }
 

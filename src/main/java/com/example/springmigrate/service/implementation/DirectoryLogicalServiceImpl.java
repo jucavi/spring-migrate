@@ -27,7 +27,7 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
      * @throws IOException
      */
     @Override
-    public List<DirectoryNodeDto> normalizeDirectoryName() throws IOException {
+    public List<DirectoryNodeDto> normalizeDirectoriesNames() throws IOException {
 
         List<DirectoryNodeDto> directories = repository.findAll();
         List<DirectoryNodeDto> leafs = new ArrayList<>();

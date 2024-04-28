@@ -1,19 +1,23 @@
 package com.example.springmigrate;
 
 import com.example.springmigrate.service.implementation.DirectoryLogicalServiceImpl;
+import com.example.springmigrate.service.implementation.Migrate;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.nio.file.Paths;
 import java.util.Scanner;
 
 @SpringBootApplication
 public class App implements CommandLineRunner {
 
 	private static DirectoryLogicalServiceImpl directoryLogicalService;
+	private static Migrate migrate;
 
-	public App(DirectoryLogicalServiceImpl directoryLogicalService) {
+	public App(DirectoryLogicalServiceImpl directoryLogicalService, Migrate migrate) {
 		App.directoryLogicalService = directoryLogicalService;
+		App.migrate = migrate;
 	}
 
 	public static void main(String[] args) {
@@ -23,8 +27,17 @@ public class App implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 
-		if (userWarningElection()) {
-			// TODO: IMPLEMENTATION
+		if (args.length == 1) {
+			if (userWarningElection()) {
+
+				// TODO: IMPLEMENTATION
+				migrate.migrate(Paths.get(args[0]));
+			}
+
+		} else {
+			System.out.println("************************************************\n\n" +
+					"Usage: java -jar migrate.jar <directories_path>\n\n" +
+					"************************************************\n");
 		}
 	}
 

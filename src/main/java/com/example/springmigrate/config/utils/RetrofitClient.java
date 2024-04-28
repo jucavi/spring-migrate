@@ -1,5 +1,6 @@
 package com.example.springmigrate.config.utils;
 
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,14 +12,17 @@ import java.util.concurrent.TimeUnit;
 
 
 @Component
-@RequiredArgsConstructor
 public class RetrofitClient {
 
-    @Value(value = "${app.app.api-url}:http//localhost:9004")
-    private static String baseUrl = "http://localhost:9004";
+    //@Value(value = "${app.app.api-url}:http//localhost:9004")
+    private static String baseUrl;
     private static Retrofit instance;
 
-    public static Retrofit getInstance() {
+    public RetrofitClient( @Value("${app.api-url}") String baseUrl) {
+        this.baseUrl = baseUrl;
+    }
+
+    public Retrofit getInstance() {
         if (instance == null) {
             OkHttpClient.Builder httpClient = new OkHttpClient.Builder()
                     .readTimeout(5, TimeUnit.SECONDS);

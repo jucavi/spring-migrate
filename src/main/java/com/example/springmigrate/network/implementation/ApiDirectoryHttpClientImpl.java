@@ -5,6 +5,8 @@ import com.example.springmigrate.dto.DirectoryFilterNodeDto;
 import com.example.springmigrate.dto.DirectoryNodeDto;
 import com.example.springmigrate.network.IDirectoryHttpClient;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -13,13 +15,12 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
-@AllArgsConstructor
 public class ApiDirectoryHttpClientImpl {
 
-    private final IDirectoryHttpClient httpClient;
+    private IDirectoryHttpClient httpClient;
 
-    public ApiDirectoryHttpClientImpl() {
-        httpClient = RetrofitClient.getInstance()
+    public ApiDirectoryHttpClientImpl(RetrofitClient retrofitClient) {
+        httpClient = retrofitClient.getInstance()
                 .create(IDirectoryHttpClient.class);
     }
 

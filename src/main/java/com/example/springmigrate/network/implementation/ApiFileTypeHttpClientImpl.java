@@ -12,13 +12,12 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
-@AllArgsConstructor
 public class ApiFileTypeHttpClientImpl {
 
-    private final IFileTypeHttpClient httpClient;
+    private IFileTypeHttpClient httpClient;
 
-    public ApiFileTypeHttpClientImpl() {
-        httpClient = RetrofitClient.getInstance()
+    public ApiFileTypeHttpClientImpl(RetrofitClient retrofitClient) {
+        httpClient = retrofitClient.getInstance()
                 .create(IFileTypeHttpClient.class);
     }
 
