@@ -20,9 +20,18 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
 
     private final IDirectoryRepository repository;
 
+    /**
+     * Returns a list af leafs created
+     *
+     * @return list of leafs created
+     * @throws IOException
+     */
     @Override
-    public DirectoryNodeDto normalizeDirectoryName() throws IOException {
+    public List<DirectoryNodeDto> normalizeDirectoryName() throws IOException {
+
         List<DirectoryNodeDto> directories = repository.findAll();
+        List<DirectoryNodeDto> leafs = new ArrayList<>();
+
 
         for (DirectoryNodeDto directory : directories) {
 
@@ -33,12 +42,12 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
             if (namePath.getNameCount() > 1) {
                 // Do the magic here
                 // split directory name and create simple directories
-                createParentsAndRenameLeaf(directory, namePath);
+                leafs.add(createParentsAndRenameLeaf(directory));
             }
         }
 
-        // Must return leaf directory node renamed
-        return new DirectoryNodeDto();
+        // Must return a list of leafs directories nodes renamed
+        return leafs;
     }
 
     private DirectoryNodeDto createFromRelativeRoute(DirectoryNodeDto parent, Path path, Integer index) throws IOException {
