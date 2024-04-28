@@ -62,12 +62,12 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
                         .build());
 
         if (result == null) {
-            // find directoy node and node
+            // find directory node
             result = findDirectory(actualDirectoryName, parent.getId());
         }
 
 
-        if (index == path.getNameCount()) {
+        if (index == path.getNameCount() - 1) {
             return result;
         }
 
@@ -75,45 +75,29 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
         return createFromRelativeRoute(result, path, ++index);
     }
 
-    private void createParentsAndRenameLeaf(DirectoryNodeDto directory, Path namePath) throws IOException {
 
-        DirectoryNodeDto parent = new DirectoryNodeDto();
-        parent.setParentDirectoryId(directory.getParentDirectoryId());
+    /**
+     * Creates all parents and rename original node as leaf keeping all children references
+     *
+     * @param directory complex named directory
+     * @return leaf node with all children attached
+     * @throws IOException
+     */
+    private DirectoryNodeDto createParentsAndRenameLeaf(DirectoryNodeDto directory) throws IOException {
 
-        createFromRelativeRoute(parent, namePath, 0);
+        Path namePath = Paths.get(directory.getName());
 
-//        // complex name has at least one parent
-//        Path parents = namePath.getParent();
-//        Path leaf = namePath.getFileName();
-//
-//        // base path + parents path + leaf
-//        String basePath = directory.getPathBase();
-//
-//        DirectoryNodeDto result = createDirectory(
-//                DirectoryNodeDto.builder()
-//                        .name(parents.getParent()
-//                                .getFileName().toString())
-//                        .pathBase(
-//                                Paths.get(
-//                                        basePath,
-//                                        parents.toString())
-//                                        .toString())
-//                        .build());
-//
-//        DirectoryNodeDto parent;
-//        if (result != null) {
-//            parent = result;
-//
-//        } else {
-//
-//            DirectoryFilterNodeDto filter = DirectoryFilterNodeDto.builder()
-//                    .content(
-//                            ContentNodeDto.builder()
-//                                    .active(true)
-//                                    .name()
-//                                    .build())
-//                    .build();
-//        }
+        // create a parent
+        DirectoryNodeDto rootParent = new DirectoryNodeDto();
+        rootParent.setParentDirectoryId(directory.getParentDirectoryId());
+
+        // call with parent directory and only parents names
+        DirectoryNodeDto lastParent = createFromRelativeRoute(rootParent, namePath.getParent(), 0);
+
+        // Leaf
+        directory.setParentDirectoryId(lastParent.getId());
+
+        return repository.updateDirectory(directory);
     }
 
     /**
@@ -149,6 +133,7 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
         return repository.updateDirectory(directory);
     }
 
+    // TODO review response
     @Override
     public DirectoryNodeDto findDirectory(String name, String parentId) throws IOException {
 
