@@ -22,6 +22,6 @@ public class FileTypeImpl implements IFileTypeRepository {
      */
     @Override
     public List<FileTypeNodeDto> findAll() throws IOException {
-        return  fileTypeHttpClient.apiFindFiles();
+        return  fileTypeHttpClient.apiFindTypes();
     }
 }

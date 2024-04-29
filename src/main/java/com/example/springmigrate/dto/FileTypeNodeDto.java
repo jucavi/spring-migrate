@@ -13,7 +13,6 @@ import lombok.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FileTypeNodeDto extends AbstractEntityDto {
 
-    String id;
     String name;
     String extension;
     String mimeType;

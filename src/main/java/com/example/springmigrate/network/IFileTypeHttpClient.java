@@ -9,6 +9,6 @@ import java.util.List;
 
 public interface IFileTypeHttpClient {
 
-    @GET("/types")
+    @GET("/file-types")
     Call<List<FileTypeNodeDto>> finFileTypes();
 }

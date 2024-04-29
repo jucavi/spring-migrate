@@ -32,7 +32,7 @@ public class ApiFileHttpClientImpl {
         Call<List<FileNodeDto>> call = httpClient.finFiles();
         Response<List<FileNodeDto>> response = call.execute();
 
-        log.info("#apiFindFiles: {}", response.code());
+        log.info("#apiFindTypes: {}", response.code());
         if (!response.isSuccessful()) {
             return null;
         }
