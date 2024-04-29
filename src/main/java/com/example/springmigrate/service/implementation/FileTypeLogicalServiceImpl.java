@@ -1,7 +1,6 @@
 package com.example.springmigrate.service.implementation;
 
 import com.example.springmigrate.dto.FileTypeNodeDto;
-import com.example.springmigrate.repository.IDirectoryRepository;
 import com.example.springmigrate.repository.IFileTypeRepository;
 import com.example.springmigrate.service.IFileTypeLogicalService;
 import lombok.AllArgsConstructor;

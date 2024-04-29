@@ -1,7 +1,5 @@
 package com.example.springmigrate.config.utils;
 
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
