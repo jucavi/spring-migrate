@@ -11,8 +11,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ContentNodeDto {
 
-    private String id;
-    private Boolean active;
+    private Boolean active = true;
     private String exactName;
     private String fromDateTime;
     List<String> ids;

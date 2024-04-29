@@ -22,7 +22,7 @@ public interface IDirectoryRepository {
      * @param directory directory node with id null
      * @return list of directories created, otherwise {@code null}
      */
-    List<DirectoryNodeDto> createDirectory(DirectoryNodeDto directory) throws IOException;
+    List<DirectoryNodeDto> createDirectory(List<DirectoryNodeDto> directory) throws IOException;
 
     /**
      * Find directory by uuid identifier
@@ -48,24 +48,31 @@ public interface IDirectoryRepository {
     /**
      * Find all directories by filter
      *
-     * @param directories directory filter
+     * @param filter directory filter
      * @return list of directories created
      */
-    List<DirectoryNodeDto> findAllDirectoriesByFilter(List<DirectoryFilterNodeDto> directories) throws IOException;
+    List<DirectoryNodeDto> findAllDirectoriesByFilter(DirectoryFilterNodeDto filter) throws IOException;
 
     /**
      * Find first directory that mach with filter criteria
      *
-     * @param directories directory filter
+     * @param filter directory filter
      * @return list with first directory match
      */
-    List<DirectoryNodeDto> findDirectoryByFilter(List<DirectoryFilterNodeDto> directories) throws IOException;
+    DirectoryNodeDto findDirectoryByFilter(DirectoryFilterNodeDto filter) throws IOException;
 
+
+    /**
+     * Delete(soft) directory by identifier
+     *
+     * @param uuid identifier
+     */
+    void deleteDirectory(String uuid) throws IOException;
 
     /**
      * Delete directory by identifier
      *
      * @param uuid identifier
      */
-    void deleteDirectory(String uuid) throws IOException;
+    void deleteDirectoryHard(String uuid) throws IOException;
 }

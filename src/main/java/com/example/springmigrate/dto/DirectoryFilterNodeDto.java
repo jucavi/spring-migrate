@@ -1,5 +1,6 @@
 package com.example.springmigrate.dto;
 
+import com.example.springmigrate.config.utils.AbstractEntityDto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 
@@ -7,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DirectoryFilterNodeDto {
+public class DirectoryFilterNodeDto extends AbstractEntityDto {
 
     private ContentNodeDto content;
     private Integer page;

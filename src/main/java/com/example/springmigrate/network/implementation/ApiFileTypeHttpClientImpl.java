@@ -4,6 +4,8 @@ import com.example.springmigrate.config.utils.RetrofitClient;
 import com.example.springmigrate.dto.FileTypeNodeDto;
 import com.example.springmigrate.network.IFileTypeHttpClient;
 import lombok.AllArgsConstructor;
+import lombok.extern.java.Log;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -12,9 +14,10 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
+@Log4j2
 public class ApiFileTypeHttpClientImpl {
 
-    private IFileTypeHttpClient httpClient;
+    private final IFileTypeHttpClient httpClient;
 
     public ApiFileTypeHttpClientImpl(RetrofitClient retrofitClient) {
         httpClient = retrofitClient.getInstance()
@@ -26,6 +29,7 @@ public class ApiFileTypeHttpClientImpl {
         Call<List<FileTypeNodeDto>> call = httpClient.finFileTypes();
         Response<List<FileTypeNodeDto>> response = call.execute();
 
+        log.info("#apiFindFiles: {}", response.code());
         if (!response.isSuccessful()) {
             return null;
         }

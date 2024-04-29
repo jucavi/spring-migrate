@@ -28,11 +28,13 @@ public class App implements CommandLineRunner {
 	public void run(String... args) throws Exception {
 
 		if (args.length == 1) {
-			if (userWarningElection()) {
+//			if (userWarningElection()) {
+//
+//				// TODO: IMPLEMENTATION
+//				migrate.migrate(Paths.get(args[0]));
+//			}
 
-				// TODO: IMPLEMENTATION
-				migrate.migrate(Paths.get(args[0]));
-			}
+			migrate.migrate(Paths.get(args[0]));
 
 		} else {
 			System.out.println("************************************************\n\n" +

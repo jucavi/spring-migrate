@@ -19,7 +19,7 @@ public class RetrofitClient {
     private static Retrofit instance;
 
     public RetrofitClient( @Value("${app.api-url}") String baseUrl) {
-        this.baseUrl = baseUrl;
+        RetrofitClient.baseUrl = baseUrl;
     }
 
     public Retrofit getInstance() {

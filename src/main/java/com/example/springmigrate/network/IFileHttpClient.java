@@ -2,6 +2,7 @@ package com.example.springmigrate.network;
 
 
 import com.example.springmigrate.dto.FileNodeDto;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.*;
 
@@ -22,6 +23,6 @@ public interface IFileHttpClient {
     Call<FileNodeDto> updateFile(@Path("id") String id, @Body FileNodeDto dto);
 
     @DELETE("/files/{id}")
-    Call<Integer> deleteFileById(@Path("id") String id);
+    Call<ResponseBody> deleteFileById(@Path("id") String id);
 
 }

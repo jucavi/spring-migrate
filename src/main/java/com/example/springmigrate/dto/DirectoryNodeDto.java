@@ -15,5 +15,5 @@ public class DirectoryNodeDto extends AbstractEntityDto {
     private String name;
     private String parentDirectoryId;
     private String pathBase;
-    private Boolean active;
+    private Boolean active = true;
 }

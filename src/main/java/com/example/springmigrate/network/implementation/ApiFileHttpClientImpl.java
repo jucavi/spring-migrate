@@ -6,6 +6,9 @@ import com.example.springmigrate.network.IFileHttpClient;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
+import lombok.extern.log4j.Log4j2;
+import okhttp3.ResponseBody;
 import org.springframework.stereotype.Component;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -14,9 +17,10 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
+@Log4j2
 public class ApiFileHttpClientImpl {
 
-    private IFileHttpClient httpClient;
+    private final IFileHttpClient httpClient;
 
     public ApiFileHttpClientImpl(RetrofitClient retrofitClient) {
         httpClient = retrofitClient.getInstance()
@@ -28,6 +32,7 @@ public class ApiFileHttpClientImpl {
         Call<List<FileNodeDto>> call = httpClient.finFiles();
         Response<List<FileNodeDto>> response = call.execute();
 
+        log.info("#apiFindFiles: {}", response.code());
         if (!response.isSuccessful()) {
             return null;
         }
@@ -40,6 +45,7 @@ public class ApiFileHttpClientImpl {
         Call<FileNodeDto> call = httpClient.createFile(dto);
         Response<FileNodeDto> response = call.execute();
 
+        log.info("#apiCreateFile: {}", response.code());
         if (!response.isSuccessful()) {
             return null;
         }
@@ -52,6 +58,7 @@ public class ApiFileHttpClientImpl {
         Call<FileNodeDto> call = httpClient.findFileById(id);
         Response<FileNodeDto> response = call.execute();
 
+        log.info("#apiFindFileById: {}", response.code());
         if (!response.isSuccessful()) {
             return null;
         }
@@ -64,6 +71,7 @@ public class ApiFileHttpClientImpl {
         Call<FileNodeDto> call = httpClient.updateFile(id, dto);
         Response<FileNodeDto> response = call.execute();
 
+        log.info("#apiFindFileById: {}", response.code());
         if (!response.isSuccessful()) {
             return null;
         }
@@ -73,7 +81,9 @@ public class ApiFileHttpClientImpl {
 
     public void apiDeleteFileById(String id) throws IOException {
 
-        Call<Integer> call = httpClient.deleteFileById(id);
-        call.execute();
+        Call<ResponseBody> call = httpClient.deleteFileById(id);
+        Response<ResponseBody> response = call.execute();
+
+        log.info("#apiDeleteFileById: {}", response.code());
     }
 }

@@ -21,7 +21,7 @@ public class FileNodeDto extends AbstractEntityDto {
     private String mimeType;
     private String fileData;
     private Integer version;
-    private Boolean active;
+    private Boolean active = true;
 
     List<FileExportDto> fileExports;
 }
