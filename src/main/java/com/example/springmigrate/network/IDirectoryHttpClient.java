@@ -2,6 +2,8 @@ package com.example.springmigrate.network;
 
 import com.example.springmigrate.dto.DirectoryFilterNodeDto;
 import com.example.springmigrate.dto.DirectoryNodeDto;
+import com.example.springmigrate.dto.PaginatedListDto;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.*;
 
@@ -12,8 +14,8 @@ public interface IDirectoryHttpClient {
     @GET("/directories")
     Call<List<DirectoryNodeDto>> finDirectories();
 
-    @POST("/directories")
-    Call<List<DirectoryNodeDto>> createDirectoryHierarchicallyPhysical(@Body DirectoryNodeDto dto);
+    @POST("/directories/create-all/logical")
+    Call<List<DirectoryNodeDto>> createDirectoryHierarchicallyLogical(@Body List<DirectoryNodeDto> dtos);
 
     @GET("/directories/{id}")
     Call<DirectoryNodeDto> findDirectoryById(@Path("id") String id);
@@ -22,11 +24,14 @@ public interface IDirectoryHttpClient {
     Call<DirectoryNodeDto> updateDirectory(@Path("id") String id, @Body DirectoryNodeDto dto);
 
     @POST("/directories/searchAll")
-    Call<List<DirectoryNodeDto>> searchAllDirectoriesByFilter(@Body List<DirectoryFilterNodeDto> dtos);
+    Call<PaginatedListDto<DirectoryNodeDto>> searchAllDirectoriesByFilter(@Body DirectoryFilterNodeDto dto);
 
     @POST("/directories/searchOne")
-    Call<List<DirectoryNodeDto>> searchDirectoryByFilter(@Body List<DirectoryFilterNodeDto> dtos);
+    Call<DirectoryNodeDto> searchDirectoryByFilter(@Body DirectoryFilterNodeDto dto);
 
     @DELETE("/directories/{id}")
-    Call<Integer> deleteDirectoryById(@Path("id") String id);
+    Call<ResponseBody> deleteDirectoryById(@Path("id") String id);
+
+    @DELETE("/directories/{id}/purge")
+    Call<ResponseBody> deleteDirectoryHardById(@Path("id") String id);
 }
