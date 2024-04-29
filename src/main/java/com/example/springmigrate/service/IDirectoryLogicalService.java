@@ -11,5 +11,6 @@ public interface IDirectoryLogicalService {
     public DirectoryNodeDto createDirectory(List<DirectoryNodeDto> directories) throws IOException;
     public DirectoryNodeDto updateDirectory(DirectoryNodeDto directory) throws IOException;
     public DirectoryNodeDto findDirectory(String name, String parentId) throws IOException;
+    public DirectoryNodeDto findDirectoryById(String id) throws IOException;
 
 }

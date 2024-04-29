@@ -6,6 +6,7 @@ import com.example.springmigrate.dto.DirectoryNodeDto;
 import com.example.springmigrate.repository.IDirectoryRepository;
 import com.example.springmigrate.service.IDirectoryLogicalService;
 import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Log4j2
 @AllArgsConstructor
 public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
 
@@ -27,23 +29,29 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
      * @throws IOException
      */
     @Override
-    public List<DirectoryNodeDto> normalizeDirectoriesNames() throws IOException {
+    public List<DirectoryNodeDto> normalizeDirectoriesNames() {
 
-        List<DirectoryNodeDto> directories = repository.findAll();
+        List<DirectoryNodeDto> directories = null;
         List<DirectoryNodeDto> leafs = new ArrayList<>();
 
+        try {
+            directories = repository.findAll();
 
-        for (DirectoryNodeDto directory : directories) {
+            for (DirectoryNodeDto directory : directories) {
 
-            String name = directory.getName();
-            Path namePath = Paths.get(name);
+                String name = directory.getName();
+                Path namePath = Paths.get(name);
 
-            // paths with name count > 1, means complex directory names
-            if (namePath.getNameCount() > 1) {
-                // Do the magic here
-                // split directory name and create simple directories
-                leafs.add(createParentsAndRenameLeaf(directory));
+                // paths with name count > 1, means complex directory names
+                if (namePath.getNameCount() > 1) {
+                    // Do the magic here
+                    // split directory name and create simple directories
+                    leafs.add(createParentsAndRenameLeaf(directory));
+                }
             }
+
+        } catch (IOException e) {
+            log.error("I/O error reading directories");
         }
 
         // Must return a list of leafs directories nodes renamed
@@ -172,6 +180,11 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
         filter.setSize(20);
 
         return repository.findDirectoryByFilter(filter);
+    }
+
+    @Override
+    public DirectoryNodeDto findDirectoryById(String id) throws IOException {
+        return repository.findDirectoryById(id);
     }
 
     public List<DirectoryNodeDto> findChildrenDirectories(String parentId) throws IOException {

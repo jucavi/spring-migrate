@@ -41,7 +41,7 @@ public class ApiFileHttpClientImpl {
         Call<FileNodeDto> call = httpClient.createFile(dto);
         Response<FileNodeDto> response = call.execute();
 
-        log.info("#apiCreateFile: {}", response.code());
+        log.info("#apiCreateFile({}): {}", response.code(), dto);
         if (!response.isSuccessful()) {
             return null;
         }
@@ -54,7 +54,7 @@ public class ApiFileHttpClientImpl {
         Call<FileNodeDto> call = httpClient.findFileById(id);
         Response<FileNodeDto> response = call.execute();
 
-        log.info("#apiFindFileById: {}", response.code());
+        log.info("#apiFindFileById({}): {}", response.code(), id);
         if (!response.isSuccessful()) {
             return null;
         }
@@ -67,7 +67,7 @@ public class ApiFileHttpClientImpl {
         Call<FileNodeDto> call = httpClient.updateFile(id, dto);
         Response<FileNodeDto> response = call.execute();
 
-        log.info("#apiFindFileById: {}", response.code());
+        log.info("#apiUpdateDirectory({}): {}", response.code(), dto);
         if (!response.isSuccessful()) {
             return null;
         }
@@ -80,6 +80,6 @@ public class ApiFileHttpClientImpl {
         Call<ResponseBody> call = httpClient.deleteFileById(id);
         Response<ResponseBody> response = call.execute();
 
-        log.info("#apiDeleteFileById: {}", response.code());
+        log.info("#apiDeleteFileById({}): {}", response.code(), id);
     }
 }
