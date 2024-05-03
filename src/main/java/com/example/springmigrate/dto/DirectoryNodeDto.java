@@ -12,8 +12,8 @@ import lombok.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DirectoryNodeDto extends AbstractEntityDto {
 
+    private Boolean active = true;
     private String name;
     private String parentDirectoryId;
     private String pathBase;
-    private Boolean active = true;
 }

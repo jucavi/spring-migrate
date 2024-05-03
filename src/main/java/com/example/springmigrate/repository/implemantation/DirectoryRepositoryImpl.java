@@ -92,6 +92,7 @@ public class DirectoryRepositoryImpl  implements IDirectoryRepository {
         return directoryHttpClient.apiSearchDirectoryByFilter(filter);
     }
 
+
     /**
      * Delete directory by identifier
      *

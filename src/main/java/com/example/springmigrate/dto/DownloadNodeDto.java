@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 public class DownloadNodeDto {
 
     private String authority;
-    private ContentNodeDto content;
+    private ContentDirectoryNodeDto content;
     private Integer defaultPort;
-    //private DeserializedFieldsNodeDto deserializedFields;
+    private DeserializedFieldsNodeDto deserializedFields;
     private String file;
     private String host;
     private String path;

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.List;
 
 public interface IFileRepository {
+
     /**
      * Find all files
      *
@@ -13,13 +14,6 @@ public interface IFileRepository {
      */
     List<FileNodeDto> findAll() throws IOException;
 
-    /**
-     * Create file, 409 if already exists
-     *
-     * @param file file node with id null
-     * @return file ndode created, otherwise {@code null}
-     */
-    FileNodeDto createFile(FileNodeDto file) throws IOException;
 
     /**
      * Find file by uuid identifier
@@ -29,6 +23,16 @@ public interface IFileRepository {
      */
     FileNodeDto findFileById(String uuid) throws IOException;
 
+
+    /**
+     * Create file, 409 if already exists
+     *
+     * @param file file node with id null
+     * @return file ndode created, otherwise {@code null}
+     */
+    FileNodeDto createFile(FileNodeDto file) throws IOException;
+
+
     /**
      * Update a file
      *
@@ -36,6 +40,7 @@ public interface IFileRepository {
      * @return file if updated, otherwise {@code null}
      */
     FileNodeDto updateFile(String id, FileNodeDto file) throws IOException;
+
 
     /**
     /**

@@ -16,6 +16,7 @@ public interface IDirectoryRepository {
      */
     List<DirectoryNodeDto> findAll() throws IOException;
 
+
     /**
      * Create directory, 409 if already exists
      *
@@ -24,6 +25,7 @@ public interface IDirectoryRepository {
      */
     List<DirectoryNodeDto> createDirectory(List<DirectoryNodeDto> directory) throws IOException;
 
+
     /**
      * Find directory by uuid identifier
      *
@@ -31,6 +33,7 @@ public interface IDirectoryRepository {
      * @return directory if exists, otherwise {@code null}
      */
     DirectoryNodeDto findDirectoryById(String uuid) throws IOException;
+
 
     /**
      * Update a directory
@@ -45,6 +48,7 @@ public interface IDirectoryRepository {
      */
     DirectoryNodeDto updateDirectory(DirectoryNodeDto directory) throws IOException;
 
+
     /**
      * Find all directories by filter
      *
@@ -52,6 +56,7 @@ public interface IDirectoryRepository {
      * @return list of directories created
      */
     List<DirectoryNodeDto> findAllDirectoriesByFilter(DirectoryFilterNodeDto filter) throws IOException;
+
 
     /**
      * Find first directory that mach with filter criteria
@@ -68,6 +73,7 @@ public interface IDirectoryRepository {
      * @param uuid identifier
      */
     void deleteDirectory(String uuid) throws IOException;
+
 
     /**
      * Delete directory by identifier

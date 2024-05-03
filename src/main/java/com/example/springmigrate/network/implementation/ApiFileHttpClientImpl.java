@@ -28,7 +28,7 @@ public class ApiFileHttpClientImpl {
         Call<List<FileNodeDto>> call = httpClient.finFiles();
         Response<List<FileNodeDto>> response = call.execute();
 
-        log.info("#apiFindTypes: {}", response.code());
+        //log.info("#apiFindTypes: {}", response.code());
         if (!response.isSuccessful()) {
             return null;
         }
@@ -41,7 +41,7 @@ public class ApiFileHttpClientImpl {
         Call<FileNodeDto> call = httpClient.createFile(dto);
         Response<FileNodeDto> response = call.execute();
 
-        log.info("#apiCreateFile({}): {}", response.code(), dto);
+        //log.info("#apiCreateFile({}): {}", response.code(), dto);
         if (!response.isSuccessful()) {
             return null;
         }
@@ -54,7 +54,7 @@ public class ApiFileHttpClientImpl {
         Call<FileNodeDto> call = httpClient.findFileById(id);
         Response<FileNodeDto> response = call.execute();
 
-        log.info("#apiFindFileById({}): {}", response.code(), id);
+        //log.info("#apiFindFileById({}): {}", response.code(), id);
         if (!response.isSuccessful()) {
             return null;
         }
@@ -62,12 +62,12 @@ public class ApiFileHttpClientImpl {
         return response.body();
     }
 
-    public FileNodeDto apiUpdateDirectory(String id, FileNodeDto dto) throws IOException {
+    public FileNodeDto apiUpdateFile(FileNodeDto dto, String id) throws IOException {
 
-        Call<FileNodeDto> call = httpClient.updateFile(id, dto);
+        Call<FileNodeDto> call = httpClient.updateFile(dto, id);
         Response<FileNodeDto> response = call.execute();
 
-        log.info("#apiUpdateDirectory({}): {}", response.code(), dto);
+        //log.info("#apiUpdateDirectory({}): {}", response.code(), dto);
         if (!response.isSuccessful()) {
             return null;
         }
@@ -79,7 +79,6 @@ public class ApiFileHttpClientImpl {
 
         Call<ResponseBody> call = httpClient.deleteFileById(id);
         Response<ResponseBody> response = call.execute();
-
-        log.info("#apiDeleteFileById({}): {}", response.code(), id);
+        //log.info("#apiDeleteFileById({}): {}", response.code(), id);
     }
 }

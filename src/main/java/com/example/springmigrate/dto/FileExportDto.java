@@ -13,6 +13,7 @@ import lombok.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FileExportDto extends AbstractEntityDto {
 
+    private Boolean active = true;
     private String expirationDate;
     private String file;
     private DownloadNodeDto download;

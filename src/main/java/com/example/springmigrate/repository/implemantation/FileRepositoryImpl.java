@@ -47,9 +47,8 @@ public class FileRepositoryImpl implements IFileRepository {
         return fileHttpClient.apiFindFileById(uuid);
     }
 
-    @Override
-    public FileNodeDto updateFile(String id, FileNodeDto file) throws IOException {
-        return fileHttpClient.apiUpdateDirectory(id, file);
+    public FileNodeDto updateFile(String id, FileNodeDto dto) throws IOException {
+        return fileHttpClient.apiUpdateFile(dto, id);
     }
 
     /**

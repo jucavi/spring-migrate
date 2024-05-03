@@ -4,7 +4,7 @@
 filter.rootPath=c:/
 ```
 
-## FileController 
+## FileController#updateFile
 - Descomentado endpoint update
 - modificado #isvalid()
 ```java
@@ -15,8 +15,32 @@ dto.isValid(false, true);
 parentDirectory = (Directory) Hibernate.unproxy(parentDirectory);
 fileType = (FileType) Hibernate.unproxy(fileType);
 ```
+-Se agrega try-catch
+* linea 622
+```java
+// Added try catch for debug
+try {
+    // only move physical
+    entity = fileService.updateFile(FileDto.convertToEntity(dto, parentDirectory,
+            fileType));
+} catch (Exception ex) {
+    // Set entity null
+    entity = null;
+}
+```
 
-## DirectoryController
+## FileServiceImpl#updateFile
+* linea 90
+```java
+} else {
+
+    // moveFile(getFilePathBase(oldFile), getFilePathBase(updatedFile), oldFile.getName(), updatedFile.getName());
+
+}
+```
+
+
+## DirectoryController#getAll
 - Sustituimos por error 500
 ```java
 // COMENTTADO POR ERROR 500: NuSuchElementException
@@ -48,7 +72,7 @@ Hibernate.unproxy(dtos);
 // deletePhisicalDirectory(directory);
 ```
 
-## DirectoryServiceImp
+## DirectoryServiceImp#updateDirectory
 - Se comenta porque fisicamente no existen los directorios
   1. Si los directorios existen se puede dejar comentado
 ```java

@@ -20,7 +20,7 @@ public interface IFileHttpClient {
     Call<FileNodeDto> findFileById(@Path("id") String id);
 
     @PUT("/files/{id}")
-    Call<FileNodeDto> updateFile(@Path("id") String id, @Body FileNodeDto dto);
+    Call<FileNodeDto> updateFile(@Body FileNodeDto dto, @Path("id") String id);
 
     @DELETE("/files/{id}")
     Call<ResponseBody> deleteFileById(@Path("id") String id);

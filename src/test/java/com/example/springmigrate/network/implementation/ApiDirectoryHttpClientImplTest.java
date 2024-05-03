@@ -1,6 +1,6 @@
 package com.example.springmigrate.network.implementation;
 
-import com.example.springmigrate.dto.ContentNodeDto;
+import com.example.springmigrate.dto.ContentDirectoryNodeDto;
 import com.example.springmigrate.dto.DirectoryFilterNodeDto;
 import com.example.springmigrate.dto.DirectoryNodeDto;
 import org.junit.jupiter.api.BeforeEach;
@@ -91,7 +91,7 @@ class ApiDirectoryHttpClientImplTest {
         String name = "testName";
         String pathBase = Paths.get(dto.getPathBase(), dto.getName()).toString();
 
-        ContentNodeDto content = new ContentNodeDto();
+        ContentDirectoryNodeDto content = new ContentDirectoryNodeDto();
         content.setActive(true);
         content.setExactName(name);
         content.setParentDirectoryId(dto.getId());
@@ -113,7 +113,7 @@ class ApiDirectoryHttpClientImplTest {
         String name = "testName";
         String pathBase = Paths.get(dto.getPathBase(), dto.getName()).toString();
 
-        ContentNodeDto content = new ContentNodeDto();
+        ContentDirectoryNodeDto content = new ContentDirectoryNodeDto();
         content.setActive(true);
         content.setExactName(name);
         content.setParentDirectoryId(dto.getId());
