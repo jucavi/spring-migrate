@@ -1,16 +1,12 @@
 package com.example.springmigrate;
 
-import com.example.springmigrate.config.utils.ApiUrl;
 import com.example.springmigrate.service.implementation.DirectoryLogicalServiceImpl;
 import com.example.springmigrate.service.implementation.MigratePhysicalDataService;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 
-import java.io.IOException;
 import java.net.ConnectException;
 import java.nio.file.Path;
 import java.nio.file.Paths;

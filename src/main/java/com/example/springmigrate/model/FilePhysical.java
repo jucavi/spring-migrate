@@ -9,9 +9,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class File {
+public class FilePhysical {
 
     private String name;
     private String extension;
-    private Directory parentDirectory;
+    private DirectoryPhysical parentDirectory;
+
 }

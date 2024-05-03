@@ -1,6 +1,5 @@
 package com.example.springmigrate.network.implementation;
 
-import com.example.springmigrate.dto.DirectoryNodeDto;
 import com.example.springmigrate.dto.FileNodeDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
