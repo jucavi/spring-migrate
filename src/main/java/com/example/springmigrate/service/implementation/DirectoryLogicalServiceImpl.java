@@ -30,7 +30,7 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
     @Override
     public List<DirectoryNodeDto> normalizeDirectoriesNames() {
 
-        List<DirectoryNodeDto> directories = null;
+        List<DirectoryNodeDto> directories;
         List<DirectoryNodeDto> leafs = new ArrayList<>();
 
         try {
@@ -46,6 +46,17 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
                     // Do the magic here
                     // split directory name and create simple directories
                     leafs.add(createParentsAndRenameLeaf(directory));
+
+                } else {
+                    // normalize all directories with lower case
+                    log.info(directory.getName());
+                    directory.setName(directory.getName().toLowerCase());
+
+                    if (directory.getParentDirectoryId() != null) {
+                        directory.setPathBase(null);
+                    }
+
+                    repository.updateDirectory(directory);
                 }
             }
 
