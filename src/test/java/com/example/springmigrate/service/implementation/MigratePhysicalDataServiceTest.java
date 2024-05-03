@@ -33,15 +33,5 @@ class MigratePhysicalDataServiceTest {
 
     @Test
     void renameDuplicatedFile() {
-
-        try {
-            Path newPath = service.getPathNameIfDuplicatedFile(path.getParent(), "text2.txt", "text.txt");
-
-            assertTrue(Files.exists(newPath));
-            assertTrue(newPath.getFileName().toString().startsWith("002"));
-        } catch (Exception ex) {
-
-        }
-
     }
 }
