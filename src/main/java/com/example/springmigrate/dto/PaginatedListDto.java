@@ -1,7 +1,9 @@
 package com.example.springmigrate.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.LinkedList;
 import java.util.List;

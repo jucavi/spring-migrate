@@ -1,6 +1,8 @@
 package com.example.springmigrate.model;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;

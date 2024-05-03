@@ -3,7 +3,10 @@ package com.example.springmigrate.dto;
 
 import com.example.springmigrate.config.utils.AbstractEntityDto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 
 @EqualsAndHashCode(callSuper = true)
