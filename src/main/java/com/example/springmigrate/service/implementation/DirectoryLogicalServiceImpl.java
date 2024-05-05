@@ -215,10 +215,17 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
     private DirectoryNodeDto createParentsAndRenameLeaf(DirectoryNodeDto directory) throws IOException {
 
         Path namePath = Paths.get(directory.getName());
-        // create a parent
+
+        // find parent directory
         DirectoryNodeDto rootParent = repository.findDirectoryById(directory.getParentDirectoryId());
-        // call with parent directory and only parents names
-        DirectoryNodeDto lastParent = createFromRelativeRoute(rootParent, namePath.getParent(), 0);
+
+        // call with parent directory of complex node
+        // and all parents nodes of a leaf in relative path form
+        // from directory named -> /d1/d2/d3/leaf with parent -> /parent
+        // complex directories always have a parent (minimum complex directory name /d1/d2 -> parent(/d1))
+        //      rootParent -> /parent
+        //      parent nodes -> /d1/d2/d3
+        DirectoryNodeDto lastParent = createFromRelativeRoute(rootParent, namePath.getParent(), directory.getId(), 0);
 
         String leafName = Paths.get(directory.getName())
                 .getFileName()
@@ -274,24 +281,61 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
     /**
      * Creates all directories from relative path in parent directory
      *
+     * <ul>
+     *     <li>Example:
+     *     </li>
+     *     <li>directory named -> /d1/d2/d3/leaf with parent -> /parent
+     *     </li>
+     *     <li>rootParent -> /parent
+     *     </li>
+     *     <li>path -> /d1/d2/d3
+     *     </li>
+     *
+     *     <li>Result:
+     *     </li>
+     *     <li>/d1 -> /parent
+     *     </li>
+     *     <li>/d2 -> /d1
+     *     </li>
+     *     <li>/d3 -> /d2
+     *     </li>
+     *     <li>returns /d3
+     *     </li>
+     *
+     *     if /parent == null; then update root's parent pointer to first node created
+     * </ul>
+     *
      * @param parent parent directory
      * @param path relative path
-     * @param index index of subpath
+     * @param complexId identifier of complex directory name
+     * @param index index of sub-path
      * @return last directory created
      * @throws IOException if I/O error
      */
-    private DirectoryNodeDto createFromRelativeRoute(DirectoryNodeDto parent, Path path, Integer index) throws IOException {
+    private DirectoryNodeDto createFromRelativeRoute(DirectoryNodeDto parent, Path path, String complexId, Integer index) throws IOException {
 
         String actualDirectoryName = path.subpath(index, index + 1).toString();
         String pathBase = Paths.get(parent.getPathBase(), parent.getName()).toString();
         DirectoryNodeDto result = createDirectory(parent, actualDirectoryName, pathBase);
+
+        // TODO
+        // root's parent directory is a root directory (in root directories table)
+        // root directory points to complex named node
+        // then we need to update root directory with directory node created
+        // this can only happen at first call
+        if (parent.getParentDirectoryId() == null && index == 0) {
+            // Update rootDirectory -> parent.id to rootDirectory -> result.id
+            // 1. find all root's directories whose points to complex node identifier
+
+            // 2, iterate over and update DIRECTORY_ID with result identifier
+        }
 
         if (index == path.getNameCount() - 1) {
             return result;
         }
 
         assert result != null;
-        return createFromRelativeRoute(result, path, ++index);
+        return createFromRelativeRoute(result, path, complexId, ++index);
     }
 
     /**
