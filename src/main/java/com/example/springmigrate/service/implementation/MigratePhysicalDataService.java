@@ -1,5 +1,7 @@
 package com.example.springmigrate.service.implementation;
 
+import com.example.springmigrate.dto.ContentDirectoryNodeDto;
+import com.example.springmigrate.dto.DirectoryFilterNodeDto;
 import com.example.springmigrate.dto.DirectoryNodeDto;
 import com.example.springmigrate.dto.FileNodeDto;
 import com.example.springmigrate.model.DirectoryPhysical;
@@ -52,8 +54,8 @@ public class MigratePhysicalDataService {
     public void migrate(Path directoryPath) throws IOException {
 
         // reduce complex names
-        // Directories with uuid and complex names
-        directoryLogicalService.normalizeDirectoriesNames();
+        //Directories with uuid and complex names
+        List<DirectoryNodeDto> leafs = normalizeDirectoriesNames();
         traverseAndMigrate(directoryPath);
     }
 
@@ -63,6 +65,7 @@ public class MigratePhysicalDataService {
      *
      * @param directoryPath directory path
      */
+    //TODO: RENAME EXISTING FOLDERS WITHOUT UUID NAME TO LOWER
     private void traverseAndMigrate(Path directoryPath) {
 
         for (Path path : getPathList(directoryPath)) {
@@ -103,7 +106,7 @@ public class MigratePhysicalDataService {
         }
     }
 
-    private void fileProcessLogic(FilePhysical filePhysicalUUID) throws IOException, IllegalArgumentException {
+    private void fileProcessLogic(@NotNull FilePhysical filePhysicalUUID) throws IOException, IllegalArgumentException {
 
         // Find logical directory with physical info
         DirectoryNodeDto parentLogical = directoryLogicalService.createDirectory(
@@ -137,7 +140,7 @@ public class MigratePhysicalDataService {
      * @param parentLogical logical parent directory extracted from physical route
      * @throws IOException I/O exception during service call
      */
-    private void migrateData(FilePhysical filePhysicalUUID, DirectoryNodeDto parentLogical) throws IOException, IllegalArgumentException {
+    private void migrateData(@NotNull FilePhysical filePhysicalUUID, @NotNull DirectoryNodeDto parentLogical) throws IOException, IllegalArgumentException {
         // find logical file by uuid
         FileNodeDto dto = fileLogicalService.findFileById(filePhysicalUUID.getName());
 
@@ -243,16 +246,10 @@ public class MigratePhysicalDataService {
     /**
      * Check for duplicated files in physical storage and return a file with unique filename
      *
-     * @param parentPath absolute parent directory path
-     * @param filename   filename
-     */
-    /**
-     * Check for duplicated files in physical storage and return a file with unique filename
-     *
      * @param filePhysical physical file
      * @return new file with unique name in storage path
      */
-    public FilePhysical getPathNameIfDuplicatedFile(FilePhysical filePhysical) {
+    public FilePhysical getPathNameIfDuplicatedFile(@NotNull FilePhysical filePhysical) {
         String name = filePhysical.getName();
         File finalFileName = new File(filePhysical.getAbsolutePath().toString());
         int prefix = 1;
@@ -284,6 +281,7 @@ public class MigratePhysicalDataService {
      * @param name name
      * @return {@code true} if element name is a valid UUID, {@code false} otherwise
      */
+    @NotNull
     private static Boolean isValidUUID(String name) {
         try {
             // for validation only
@@ -292,6 +290,210 @@ public class MigratePhysicalDataService {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Returns a list af leafs created
+     *
+     * @return list of leafs created
+     */
+    public List<DirectoryNodeDto> normalizeDirectoriesNames() {
+
+        List<DirectoryNodeDto> directories;
+        List<DirectoryNodeDto> leafs = new ArrayList<>();
+
+        try {
+            directories = directoryLogicalService.findALl();
+
+            for (DirectoryNodeDto directory : directories) {
+
+                String name = directory.getName();
+                Path namePath = Paths.get(name);
+
+                // paths with name count > 1, means complex directory names
+                if (namePath.getNameCount() > 1) {
+                    // Do the magic here
+                    // split directory name and create simple directories
+                    leafs.add(createParentsAndRenameLeaf(directory));
+
+                } else {
+                    // normalize all directories with lower case
+                    log.info(directory.getName());
+                    directory.setName(directory.getName().toLowerCase());
+
+                    if (directory.getParentDirectoryId() != null) {
+                        directory.setPathBase(null);
+                    }
+
+                    directoryLogicalService.updateDirectory(directory);
+                }
+            }
+
+        } catch (IOException e) {
+            log.error("I/O error reading directories");
+        }
+
+        // Must return a list of leafs directories nodes renamed
+        return leafs;
+    }
+
+    /**
+     * Creates all parents, delete duplicated leaf node, and rename original node as leaf keeping all children references
+     *
+     * @param directory complex named directory
+     * @return leaf node with all children attached
+     * @throws IOException if I/O error occurred
+     */
+    private DirectoryNodeDto createParentsAndRenameLeaf(@NotNull DirectoryNodeDto directory) throws IOException {
+
+        Path namePath = Paths.get(directory.getName());
+
+        // find parent directory
+        DirectoryNodeDto rootParent = directoryLogicalService.findDirectoryById(directory.getParentDirectoryId());
+
+        // call with parent directory of complex node
+        // and all parents nodes of a leaf in relative path form
+        // from directory named -> /d1/d2/d3/leaf with parent -> /parent
+        // complex directories always have a parent (minimum complex directory name /d1/d2 -> parent(/d1))
+        //      rootParent -> /parent
+        //      parent nodes -> /d1/d2/d3
+        DirectoryNodeDto lastParent = createFromRelativeRoute(rootParent, namePath.getParent(), directory.getId(), 0);
+
+        String leafName = Paths.get(directory.getName())
+                .getFileName()
+                .toString();
+
+        DirectoryNodeDto duplicatedDirectory = directoryLogicalService.findDirectoryByParentId(leafName, lastParent.getId());
+
+        if (duplicatedDirectory != null) {
+            List<DirectoryNodeDto> children = findChildrenDirectories(duplicatedDirectory.getId());
+
+            for (DirectoryNodeDto child : children) {
+                child.setParentDirectoryId(directory.getId());
+                child.setPathBase(null);
+                // update logical directory
+                directoryLogicalService.updateDirectory(child);
+            }
+
+            directoryLogicalService.deleteDirectoryHard(duplicatedDirectory.getId());
+        }
+
+        // Leaf update
+        directory.setName(
+                leafName);
+        directory.setParentDirectoryId(lastParent.getId());
+        directory.setPathBase(null);
+
+        return directoryLogicalService.updateDirectory(directory);
+    }
+
+    /**
+     * Creates all directories from relative path in parent directory
+     *
+     * <ul>
+     *     <li>Example:
+     *     </li>
+     *     <li>directory named -> /d1/d2/d3/leaf with parent -> /parent
+     *     </li>
+     *     <li>rootParent -> /parent
+     *     </li>
+     *     <li>path -> /d1/d2/d3
+     *     </li>
+     *
+     *     <li>Result:
+     *     </li>
+     *     <li>/d1 -> /parent
+     *     </li>
+     *     <li>/d2 -> /d1
+     *     </li>
+     *     <li>/d3 -> /d2
+     *     </li>
+     *     <li>returns /d3
+     *     </li>
+     *
+     *     if /parent == null; then update root's parent pointer to first node created
+     * </ul>
+     *
+     * @param parent parent directory
+     * @param path relative path
+     * @param complexId identifier of complex directory name
+     * @param index index of sub-path
+     * @return last directory created
+     * @throws IOException if I/O error
+     */
+    private DirectoryNodeDto createFromRelativeRoute(DirectoryNodeDto parent, Path path, String complexId, Integer index) throws IOException {
+
+        String actualDirectoryName = path.subpath(index, index + 1).toString();
+        String pathBase = Paths.get(parent.getPathBase(), parent.getName()).toString();
+        DirectoryNodeDto result = createDirectory(parent, actualDirectoryName, pathBase);
+
+        // TODO
+        // root's parent directory is a root directory (in root directories table)
+        // root directory points to complex named node
+        // then we need to update root directory with directory node created
+        // this can only happen at first call
+        if (parent.getParentDirectoryId() == null && index == 0) {
+            // Update rootDirectory -> parent.id to rootDirectory -> result.id
+            // 1. find all root's directories whose points to complex node identifier
+
+            // 2, iterate over and update DIRECTORY_ID with result identifier
+        }
+
+        if (index == path.getNameCount() - 1) {
+            return result;
+        }
+
+        assert result != null;
+        return createFromRelativeRoute(result, path, complexId, ++index);
+    }
+
+    /**
+     * Creates directory
+     *
+     * @param parent candidate parent directory
+     * @param name directory name
+     * @param pathBase absolute parent path
+     * @return directory created
+     * @throws IOException if I/O error
+     */
+    private DirectoryNodeDto createDirectory(DirectoryNodeDto parent, String name, String pathBase) throws IOException {
+
+        List<DirectoryNodeDto> request = new ArrayList<>();
+        request.add(DirectoryNodeDto.builder()
+                .active(true)
+                .name(name)
+                .pathBase(pathBase)
+                .build());
+
+        DirectoryNodeDto result = directoryLogicalService.createDirectories(request);
+
+        if (result == null) {
+            // find directory node
+            result = directoryLogicalService.findDirectoryByParentId(name, parent.getId());
+        }
+
+        return result;
+    }
+
+    /**
+     * Returns a list of all children directories
+     *
+     * @param parentId parent identifier
+     * @return children directories
+     * @throws IOException if I/O error occurred
+     */
+    public List<DirectoryNodeDto> findChildrenDirectories(String parentId) throws IOException {
+
+        ContentDirectoryNodeDto content = new ContentDirectoryNodeDto();
+        content.setActive(true);
+        content.setParentDirectoryId(parentId);
+
+        DirectoryFilterNodeDto filter = new DirectoryFilterNodeDto();
+        filter.setContent(content);
+        filter.setPage(0);
+        filter.setSize(100000);
+
+        return directoryLogicalService.findAllDirectoriesByFilter(filter);
     }
 
 }

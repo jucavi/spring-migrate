@@ -30,7 +30,6 @@ public class ApiDirectoryHttpClientImpl {
         Call<List<DirectoryNodeDto>> call = httpClient.finDirectories();
         Response<List<DirectoryNodeDto>> response = call.execute();
 
-        ////loginfo("#apiFindDirectories: {}", response.code());
         if (!response.isSuccessful()) {
             return null;
         }
@@ -43,7 +42,6 @@ public class ApiDirectoryHttpClientImpl {
         Call<List<DirectoryNodeDto>> call = httpClient.createDirectoryHierarchicallyLogical(dtos);
         Response<List<DirectoryNodeDto>> response = call.execute();
 
-        ////loginfo("#apiCreateDirectoryHierarchicallyLogical: {}", response.code());
         if (!response.isSuccessful()) {
             return null;
         }
@@ -57,7 +55,6 @@ public class ApiDirectoryHttpClientImpl {
         Call<DirectoryNodeDto> call = httpClient.findDirectoryById(id);
         Response<DirectoryNodeDto> response = call.execute();
 
-        //loginfo("#apiFindDirectoryById: {}", response.code());
         if (!response.isSuccessful()) {
             return null;
         }
@@ -71,7 +68,6 @@ public class ApiDirectoryHttpClientImpl {
         Call<DirectoryNodeDto> call = httpClient.updateDirectory(dto.getId(), dto);
         Response<DirectoryNodeDto> response = call.execute();
 
-        //loginfo("#apiUpdateDirectory: {}", response.code());
         if (!response.isSuccessful()) {
             return null;
         }
@@ -85,7 +81,6 @@ public class ApiDirectoryHttpClientImpl {
         Call<PaginatedListDto<DirectoryNodeDto>> call = httpClient.searchAllDirectoriesByFilter(dtos);
         Response<PaginatedListDto<DirectoryNodeDto>> response = call.execute();
 
-        ////loginfo("#apiSearchAllDirectoriesByFilter: {}", response.code());
         if (!response.isSuccessful() || response.body() == null) {
             return null;
         }
@@ -98,7 +93,6 @@ public class ApiDirectoryHttpClientImpl {
         Call<DirectoryNodeDto> call = httpClient.searchDirectoryByFilter(dto);
         Response<DirectoryNodeDto> response = call.execute();
 
-        //loginfo("#apiSearchDirectoryByFilter: {}", response.code());
         if (!response.isSuccessful()) {
             return null;
         }
@@ -111,14 +105,11 @@ public class ApiDirectoryHttpClientImpl {
 
         Call<ResponseBody> call = httpClient.deleteDirectoryById(id);
         Response<ResponseBody> response = call.execute();
-        //loginfo("#apiDeleteDirectoryById: {}", response.code());
     }
 
     public void apiDeleteDirectoryHardById(String id) throws IOException {
 
         Call<ResponseBody> call = httpClient.deleteDirectoryHardById(id);
         Response<ResponseBody> response = call.execute();
-
-        //loginfo("#apiDeleteDirectoryHardById: {}", response.code());
     }
 }

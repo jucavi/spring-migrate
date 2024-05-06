@@ -22,50 +22,15 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
 
     private final IDirectoryRepository repository;
 
+
     /**
-     * Returns a list af leafs created
+     * Returns a list af all roots directories
      *
-     * @return list of leafs created
+     * @return list af all roots directories
      */
     @Override
-    public List<DirectoryNodeDto> normalizeDirectoriesNames() {
-
-        List<DirectoryNodeDto> directories;
-        List<DirectoryNodeDto> leafs = new ArrayList<>();
-
-        try {
-            directories = repository.findAll();
-
-            for (DirectoryNodeDto directory : directories) {
-
-                String name = directory.getName();
-                Path namePath = Paths.get(name);
-
-                // paths with name count > 1, means complex directory names
-                if (namePath.getNameCount() > 1) {
-                    // Do the magic here
-                    // split directory name and create simple directories
-                    leafs.add(createParentsAndRenameLeaf(directory));
-
-                } else {
-                    // normalize all directories with lower case
-                    log.info(directory.getName());
-                    directory.setName(directory.getName().toLowerCase());
-
-                    if (directory.getParentDirectoryId() != null) {
-                        directory.setPathBase(null);
-                    }
-
-                    repository.updateDirectory(directory);
-                }
-            }
-
-        } catch (IOException e) {
-            log.error("I/O error reading directories");
-        }
-
-        // Must return a list of leafs directories nodes renamed
-        return leafs;
+    public List<DirectoryNodeDto> findALl() throws IOException {
+        return repository.findAll();
     }
 
 
@@ -76,6 +41,7 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
      * @param pathBase absolute parent path
      * @return directory created
      */
+    @Override
     public DirectoryNodeDto createDirectory(String name, String pathBase) throws IOException {
 
         List<DirectoryNodeDto> request = new ArrayList<>();
@@ -93,6 +59,29 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
         }
 
         return result;
+    }
+
+    /**
+     * Returns a list of directories whose match filter
+     *
+     * @param filter filter
+     * @return a list of directories whose match filter
+     * @throws IOException if I/O exception occurred
+     */
+    @Override
+    public List<DirectoryNodeDto> findAllDirectoriesByFilter(DirectoryFilterNodeDto filter) throws IOException {
+        return repository.findAllDirectoriesByFilter(filter);
+    }
+
+    /**
+     * Deletes directory from database
+     *
+     * @param id identifier
+     * @throws IOException if I/O exception occurred
+     */
+    @Override
+    public void deleteDirectoryHard(String id) throws IOException {
+        repository.deleteDirectoryHard(id);
     }
 
 
@@ -204,58 +193,6 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
         return repository.updateDirectory(directory);
     }
 
-
-    /**
-     * Creates all parents, delete duplicated leaf node, and rename original node as leaf keeping all children references
-     *
-     * @param directory complex named directory
-     * @return leaf node with all children attached
-     * @throws IOException if I/O error occurred
-     */
-    private DirectoryNodeDto createParentsAndRenameLeaf(DirectoryNodeDto directory) throws IOException {
-
-        Path namePath = Paths.get(directory.getName());
-
-        // find parent directory
-        DirectoryNodeDto rootParent = repository.findDirectoryById(directory.getParentDirectoryId());
-
-        // call with parent directory of complex node
-        // and all parents nodes of a leaf in relative path form
-        // from directory named -> /d1/d2/d3/leaf with parent -> /parent
-        // complex directories always have a parent (minimum complex directory name /d1/d2 -> parent(/d1))
-        //      rootParent -> /parent
-        //      parent nodes -> /d1/d2/d3
-        DirectoryNodeDto lastParent = createFromRelativeRoute(rootParent, namePath.getParent(), directory.getId(), 0);
-
-        String leafName = Paths.get(directory.getName())
-                .getFileName()
-                .toString();
-
-        DirectoryNodeDto duplicatedDirectory = findDirectoryByParentId(leafName, lastParent.getId());
-
-        if (duplicatedDirectory != null) {
-            List<DirectoryNodeDto> children = findChildrenDirectories(duplicatedDirectory.getId());
-
-            for (DirectoryNodeDto child : children) {
-                child.setParentDirectoryId(directory.getId());
-                child.setPathBase(null);
-                // update logical directory
-                repository.updateDirectory(child);
-            }
-
-            repository.deleteDirectoryHard(duplicatedDirectory.getId());
-        }
-
-        // Leaf update
-        directory.setName(
-                leafName);
-        directory.setParentDirectoryId(lastParent.getId());
-        directory.setPathBase(null);
-
-        return repository.updateDirectory(directory);
-    }
-
-
     /**
      * Returns a list of all children directories
      *
@@ -263,6 +200,7 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
      * @return children directories
      * @throws IOException if I/O error occurred
      */
+    @Override
     public List<DirectoryNodeDto> findChildrenDirectories(String parentId) throws IOException {
 
         ContentDirectoryNodeDto content = new ContentDirectoryNodeDto();
@@ -276,94 +214,4 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
 
         return repository.findAllDirectoriesByFilter(filter);
     }
-
-
-    /**
-     * Creates all directories from relative path in parent directory
-     *
-     * <ul>
-     *     <li>Example:
-     *     </li>
-     *     <li>directory named -> /d1/d2/d3/leaf with parent -> /parent
-     *     </li>
-     *     <li>rootParent -> /parent
-     *     </li>
-     *     <li>path -> /d1/d2/d3
-     *     </li>
-     *
-     *     <li>Result:
-     *     </li>
-     *     <li>/d1 -> /parent
-     *     </li>
-     *     <li>/d2 -> /d1
-     *     </li>
-     *     <li>/d3 -> /d2
-     *     </li>
-     *     <li>returns /d3
-     *     </li>
-     *
-     *     if /parent == null; then update root's parent pointer to first node created
-     * </ul>
-     *
-     * @param parent parent directory
-     * @param path relative path
-     * @param complexId identifier of complex directory name
-     * @param index index of sub-path
-     * @return last directory created
-     * @throws IOException if I/O error
-     */
-    private DirectoryNodeDto createFromRelativeRoute(DirectoryNodeDto parent, Path path, String complexId, Integer index) throws IOException {
-
-        String actualDirectoryName = path.subpath(index, index + 1).toString();
-        String pathBase = Paths.get(parent.getPathBase(), parent.getName()).toString();
-        DirectoryNodeDto result = createDirectory(parent, actualDirectoryName, pathBase);
-
-        // TODO
-        // root's parent directory is a root directory (in root directories table)
-        // root directory points to complex named node
-        // then we need to update root directory with directory node created
-        // this can only happen at first call
-        if (parent.getParentDirectoryId() == null && index == 0) {
-            // Update rootDirectory -> parent.id to rootDirectory -> result.id
-            // 1. find all root's directories whose points to complex node identifier
-
-            // 2, iterate over and update DIRECTORY_ID with result identifier
-        }
-
-        if (index == path.getNameCount() - 1) {
-            return result;
-        }
-
-        assert result != null;
-        return createFromRelativeRoute(result, path, complexId, ++index);
-    }
-
-    /**
-     * Creates directory
-     *
-     * @param parent candidate parent directory
-     * @param name directory name
-     * @param pathBase absolute parent path
-     * @return directory created
-     * @throws IOException if I/O error
-     */
-    private DirectoryNodeDto createDirectory(DirectoryNodeDto parent, String name, String pathBase) throws IOException {
-
-        List<DirectoryNodeDto> request = new ArrayList<>();
-        request.add(DirectoryNodeDto.builder()
-                .active(true)
-                .name(name)
-                .pathBase(pathBase)
-                .build());
-
-        DirectoryNodeDto result = createDirectories(request);
-
-        if (result == null) {
-            // find directory node
-            result = findDirectoryByParentId(name, parent.getId());
-        }
-
-        return result;
-    }
-
 }
