@@ -1,6 +1,7 @@
 package com.example.springmigrate.service.implementation;
 
 import com.example.springmigrate.dto.RootNodeDto;
+import com.example.springmigrate.repository.IRootDirectoryRepository;
 import com.example.springmigrate.service.IRootDirectoryService;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -15,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 public class RootDirectoryServiceImpl implements IRootDirectoryService {
 
-    private final IRootDirectoryService repository;
+    private final IRootDirectoryRepository repository;
 
     @Override
     public List<RootNodeDto> findAll() throws IOException {

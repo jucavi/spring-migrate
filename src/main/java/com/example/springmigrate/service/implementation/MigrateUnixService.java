@@ -140,7 +140,12 @@ public class MigrateUnixService {
 
                 try {
                     if (isValidUUID(filePhysicalUUID.getName())) {
+
                         migrateData(filePhysicalUUID);
+
+                    } else {
+
+                        movePhysicalFile(filePhysicalUUID, filePhysicalUUID.getName());
                     }
 
                 } catch (IllegalArgumentException ex) {
@@ -156,6 +161,31 @@ public class MigrateUnixService {
                 traverse(path);
             }
 
+        }
+    }
+
+    /**
+     * Move file to {@code unixRoot} directory
+     *
+     * @param file file
+     * @throws IOException if IOException occurred
+     */
+    private void movePhysicalFile(FilePhysical file, String newName) throws IOException {
+
+        Path originPath = file.getAbsolutePath();
+        Path destinyPath = Paths.get(unixRoot.getRootDirectory().getFullPath(), newName);
+
+        if (Files.exists(destinyPath)) {
+            file.setName(newName);
+            file.setParentDirectory(unixRoot.getRootDirectory());
+            FilePhysical renamed = getPathNameIfDuplicatedFile(file);
+
+            Files.move(originPath, renamed.getAbsolutePath());
+
+        } else {
+
+            // Renames physical not uuid filename with updated data logical
+            Files.move(originPath, destinyPath);
         }
     }
 

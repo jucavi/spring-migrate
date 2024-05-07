@@ -12,6 +12,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.List;
 
 @Component
@@ -20,7 +21,7 @@ public class ApiDirectoryHttpClientImpl {
 
     private final IDirectoryHttpClient httpClient;
 
-    public ApiDirectoryHttpClientImpl(RetrofitClient retrofitClient) {
+    public ApiDirectoryHttpClientImpl(RetrofitClient retrofitClient) throws ConnectException {
         httpClient = retrofitClient.getInstance()
                 .create(IDirectoryHttpClient.class);
     }

@@ -4,15 +4,24 @@ import com.example.springmigrate.config.utils.ApiUrl;
 import com.example.springmigrate.config.utils.error.NoRequirementsMeted;
 import com.example.springmigrate.service.implementation.MigratePhysicalDataService;
 import com.example.springmigrate.service.implementation.MigrateUnixService;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext;
+import picocli.CommandLine;
 
-import java.net.ConnectException;
+import javax.naming.Context;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 @SpringBootApplication
 @Log4j2
@@ -20,6 +29,13 @@ public class App implements CommandLineRunner {
 
 	private static MigratePhysicalDataService normalMigrate;
 	private static MigrateUnixService customMigrate;
+//	@CommandLine.Option(names = {"-u", "--url"}, defaultValue = "http://localhost:9004/", description = "API url")
+//	private static String url = "http://localhost:9004/";
+//	@CommandLine.Option(names = {"-d", "--directory"}, description = "Directory path to migrate")
+//	private String directory;
+//	@CommandLine.Option(names = {"-D", "--directories"}, split = ",", description = "Directories paths to migrate")
+//	private String[] directories;
+
 
 	public App(MigratePhysicalDataService normalMigrate, MigrateUnixService customMigrate) {
 		App.normalMigrate = normalMigrate;
@@ -27,79 +43,56 @@ public class App implements CommandLineRunner {
 	}
 
 	public static void main(String[] args) {
-		SpringApplication.run(App.class, args);
+		ApplicationContext context = SpringApplication.run(App.class, args);
 	}
 
 	@Override
-	public void run(String... args) {
+	public void run(String[] args) throws Exception {
 
-		normalClient(args);
-		customClient(args);
-	}
+//		if (directory != null && directories != null) {
+//			System.out.println("Use application [-h, --help].");
+//			System.exit(0);
+//		}
 
-	private static void customClient(String[] args) {
-		if (args.length > 0) {
+		String url = "http://localhost:9004";
+		String directory = "C:\\Soincon\\EMI\\document-manager";
+		String[] directories = new String[]{"/opt/tools/tomcat/latest", "/GestorDocumental"};
 
-			Path rootDirectory = Paths.get(args[0]);
+		userWarningMessage();
 
-			userWarningMessage();
+		if (!url.endsWith("/")) {
+			url = url.concat("/");
+		}
+
+		ApiUrl apiUrl = new ApiUrl(url);
+
+		if (directory != null) {
+			Path rootDirectory = Paths.get(directory);
 
 			try {
-				normalMigrate.migrate(rootDirectory);
+				App.normalMigrate.migrate(rootDirectory);
+
 			} catch (NoRequirementsMeted ex) {
 				log.error(ex.getMessage());
-			} catch (Exception ex) {
-				log.error("Unexpected error occurred during the migrate process: {}.", ex.getMessage());
-			}
-
-
-		} else {
-			System.out.println("***********************************************************\n\n" +
-					"Usage: java -jar migrate.jar <directories_path> [api_url]\n\n" +
-					"***********************************************************\n");
-		}
-	}
-
-	private static void normalClient(String[] args) {
-		ApiUrl apiUrl;
-
-		if (args.length > 0) {
-			Path rootDirectory = Paths.get(args[0]);
-
-			userWarningMessage();
-
-			apiUrl = new ApiUrl("http://localhost:9004/");
-
-			if (args.length == 2) {
-				String baseUrl = args[1];
-
-				if (!baseUrl.endsWith("/")) {
-					baseUrl = baseUrl.concat("/");
-				}
-
-				apiUrl = new ApiUrl(baseUrl);
-			}
-
-
-			userWarningMessage();
-
-			try {
-				normalMigrate.migrate(rootDirectory);
-
-			} catch (ConnectException ex) {
-				log.error("Unable to connect with API.");
-			} catch (Exception ex) {
+			} catch (RuntimeException ex) {
 				log.error("Unexpected error occurred during the migrate process.");
 			}
-
 		} else {
-			System.out.println("Usage:" +
-					"\n\tjava -jar migrate.jar <c:/ruta/absoluta/carpeta/archivos> [http://base/url/api]" +
-					"\n\t  URL API (default: <http://localhost:9004>)");
+
+			List<Path> paths = Arrays.stream(directories).map(Paths::get).collect(Collectors.toList());
+
+			try {
+				App.customMigrate.migrate("old", "/", paths);
+
+			} catch (NoRequirementsMeted ex) {
+				log.error(ex.getMessage());
+			} catch (RuntimeException | IOException ex) {
+				log.error("Unexpected error occurred during the migrate process.");
+			}
 		}
 	}
 
-	private static void userWarningMessage() {
+	private void userWarningMessage() {
 
 		System.out.print("***********************************************************************************" +
 				"\n                                WARNING!!!" +

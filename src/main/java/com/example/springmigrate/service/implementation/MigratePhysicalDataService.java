@@ -127,8 +127,9 @@ public class MigratePhysicalDataService {
 
             // Update physicalName
             if (isValidUUID(filePhysicalUUID.getName())) {
-
                 migrateData(filePhysicalUUID, parentLogical);
+            } else {
+                log.info("Invalid UUID: {}", filePhysicalUUID.getName());
             }
 
             // TODO: What if we have no UUID file name???
@@ -324,7 +325,6 @@ public class MigratePhysicalDataService {
 
                 } else {
                     // normalize all directories with lower case
-                    log.info(directory.getName());
                     directory.setName(directory.getName().toLowerCase());
 
                     if (directory.getParentDirectoryId() != null) {

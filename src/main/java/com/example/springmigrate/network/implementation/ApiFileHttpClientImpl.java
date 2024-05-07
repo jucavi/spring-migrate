@@ -10,6 +10,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.List;
 
 @Component
@@ -18,7 +19,7 @@ public class ApiFileHttpClientImpl {
 
     private final IFileHttpClient httpClient;
 
-    public ApiFileHttpClientImpl(RetrofitClient retrofitClient) {
+    public ApiFileHttpClientImpl(RetrofitClient retrofitClient) throws ConnectException {
         httpClient = retrofitClient.getInstance()
                 .create(IFileHttpClient.class);
     }
