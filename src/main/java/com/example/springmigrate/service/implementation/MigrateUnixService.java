@@ -174,7 +174,7 @@ public class MigrateUnixService {
 
         assert dto != null;
         // complete filename with extension from database information, and with unix root parent
-        FilePhysical filePhysical = getFilenameWithExtension(dto, filePhysicalUUID);
+        FilePhysical filePhysical = getFilenameWithExtension(dto);
 
         // Full path to physical file renamed
         // if already exist(with prefix (001-, 002, ...) and extension)
@@ -270,11 +270,10 @@ public class MigrateUnixService {
      * Create physical directory with correct extensión from database record
      *
      * @param fileDto file dto
-     * @param  file file with dto uuid as name
      * @return physical file representation
      */
     @NotNull
-    private FilePhysical getFilenameWithExtension(@NotNull FileNodeDto fileDto, FilePhysical file) {
+    private FilePhysical getFilenameWithExtension(@NotNull FileNodeDto fileDto) {
 
         String filename = fileDto.getName();
         String mimeType = fileDto.getMimeType();

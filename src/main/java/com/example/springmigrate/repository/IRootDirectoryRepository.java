@@ -1,6 +1,5 @@
 package com.example.springmigrate.repository;
 
-import com.example.springmigrate.dto.DirectoryNodeDto;
 import com.example.springmigrate.dto.RootNodeDto;
 
 import java.io.IOException;

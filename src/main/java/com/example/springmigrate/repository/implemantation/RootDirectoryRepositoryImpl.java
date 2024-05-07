@@ -1,7 +1,6 @@
 package com.example.springmigrate.repository.implemantation;
 
 import com.example.springmigrate.dto.RootNodeDto;
-import com.example.springmigrate.network.IRootDirectoryHttpClient;
 import com.example.springmigrate.network.implementation.ApiRootDirectoryHttpClient;
 import com.example.springmigrate.repository.IRootDirectoryRepository;
 import lombok.AllArgsConstructor;

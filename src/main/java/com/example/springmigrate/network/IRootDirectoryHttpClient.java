@@ -1,7 +1,6 @@
 package com.example.springmigrate.network;
 
 
-import com.example.springmigrate.dto.DirectoryNodeDto;
 import com.example.springmigrate.dto.RootNodeDto;
 import okhttp3.ResponseBody;
 import retrofit2.Call;

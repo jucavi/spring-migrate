@@ -49,9 +49,8 @@ public class MigratePhysicalDataService {
      * Create and keep database integrity from physical data
      *
      * @param directoryPath path to physical data
-     * @throws IOException if an I/O error occurred
      */
-    public void migrate(Path directoryPath) throws IOException {
+    public void migrate(Path directoryPath) {
 
         // reduce complex names
         //Directories with uuid and complex names

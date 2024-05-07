@@ -1,8 +1,7 @@
 package com.example.springmigrate;
 
 import com.example.springmigrate.config.utils.ApiUrl;
-import com.example.springmigrate.config.utils.RetrofitClient;
-import com.example.springmigrate.service.implementation.DirectoryLogicalServiceImpl;
+import com.example.springmigrate.config.utils.error.NoRequirementsMeted;
 import com.example.springmigrate.service.implementation.MigratePhysicalDataService;
 import com.example.springmigrate.service.implementation.MigrateUnixService;
 import lombok.extern.log4j.Log4j2;
@@ -32,7 +31,7 @@ public class App implements CommandLineRunner {
 	}
 
 	@Override
-	public void run(String... args) throws Exception {
+	public void run(String... args) {
 
 		normalClient(args);
 		customClient(args);
@@ -47,8 +46,8 @@ public class App implements CommandLineRunner {
 
 			try {
 				normalMigrate.migrate(rootDirectory);
-			} catch (ConnectException ex) {
-				log.error("Unable to connect with API.");
+			} catch (NoRequirementsMeted ex) {
+				log.error(ex.getMessage());
 			} catch (Exception ex) {
 				log.error("Unexpected error occurred during the migrate process: {}.", ex.getMessage());
 			}
