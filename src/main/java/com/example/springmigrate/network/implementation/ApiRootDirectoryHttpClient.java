@@ -5,6 +5,7 @@ import com.example.springmigrate.dto.DirectoryNodeDto;
 import com.example.springmigrate.dto.RootNodeDto;
 import com.example.springmigrate.network.IRootDirectoryHttpClient;
 import lombok.extern.log4j.Log4j2;
+import okhttp3.ResponseBody;
 import org.springframework.stereotype.Component;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -48,5 +49,9 @@ public class ApiRootDirectoryHttpClient {
         return response.body();
     }
 
+    public void apiDeleteByDirectoryId(String id) throws IOException {
 
+        Call<ResponseBody> call = httpClient.deleteByDirectoryId(id);
+        Response<ResponseBody> response = call.execute();
+    }
 }

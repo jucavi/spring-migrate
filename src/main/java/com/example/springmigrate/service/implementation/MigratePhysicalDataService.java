@@ -106,6 +106,13 @@ public class MigratePhysicalDataService {
         }
     }
 
+    /**
+     * File process logic
+     *
+     * @param filePhysicalUUID File with uuid name
+     * @throws IOException if IOException occurred
+     * @throws IllegalArgumentException if IllegalArgument occurred
+     */
     private void fileProcessLogic(@NotNull FilePhysical filePhysicalUUID) throws IOException, IllegalArgumentException {
 
         // Find logical directory with physical info

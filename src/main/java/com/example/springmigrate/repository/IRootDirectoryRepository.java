@@ -21,4 +21,10 @@ public interface IRootDirectoryRepository {
      * @return list of root directories nodes with child directory id
      */
     List<RootNodeDto> findByDirectoryId(String directoryId) throws IOException;
+
+
+    /**
+     * Deletes root directory by directory child Id
+     */
+    void deleteByDirectoryId(String directoryId) throws IOException;
 }

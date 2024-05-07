@@ -26,4 +26,9 @@ public class RootDirectoryRepositoryImpl implements IRootDirectoryRepository {
     public List<RootNodeDto> findByDirectoryId(String directoryId) throws IOException {
         return rootDirectoryHttpClient.apiFindByDirectoryId(directoryId);
     }
+
+    @Override
+    public void deleteByDirectoryId(String directoryId) throws IOException {
+        rootDirectoryHttpClient.apiDeleteByDirectoryId(directoryId);
+    }
 }

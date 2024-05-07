@@ -43,6 +43,9 @@ public class DirectoryPhysical {
     }
 
 
+    /**
+     * Returns the full path of a directory
+     */
     public String getFullPath() {
         return path.toString();
     }
