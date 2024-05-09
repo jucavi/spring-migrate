@@ -30,4 +30,14 @@ public class RootDirectoryRepositoryImpl implements IRootDirectoryRepository {
     public void deleteByDirectoryId(String directoryId) throws IOException {
         rootDirectoryHttpClient.apiDeleteByDirectoryId(directoryId);
     }
+
+    @Override
+    public void truncate() throws IOException {
+        rootDirectoryHttpClient.truncate();
+    }
+
+    @Override
+    public RootNodeDto createRoot(RootNodeDto rootNode) throws IOException {
+        return rootDirectoryHttpClient.createRoot(rootNode);
+    }
 }

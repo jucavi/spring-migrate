@@ -1,5 +1,6 @@
 package com.example.springmigrate.repository.implemantation;
 
+import com.example.springmigrate.dto.FileFilterDto;
 import com.example.springmigrate.dto.FileNodeDto;
 import com.example.springmigrate.network.implementation.ApiFileHttpClientImpl;
 import com.example.springmigrate.repository.IFileRepository;
@@ -23,6 +24,11 @@ public class FileRepositoryImpl implements IFileRepository {
     @Override
     public List<FileNodeDto> findAll() throws IOException {
         return  fileHttpClient.apiFindFiles();
+    }
+
+    @Override
+    public List<FileNodeDto> findFilesByFilter(FileFilterDto filter) throws IOException {
+        return fileHttpClient.apiFindFilesByFilter(filter);
     }
 
     /**

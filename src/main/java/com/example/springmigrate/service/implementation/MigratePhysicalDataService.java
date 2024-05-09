@@ -48,14 +48,19 @@ public class MigratePhysicalDataService {
     /**
      * Create and keep database integrity from physical data
      *
-     * @param directoryPath path to physical data
+     * @param directories list of paths to physical data
      */
-    public void migrate(Path directoryPath) {
+    public void migrate(List<Path> directories) {
 
         // reduce complex names
         //Directories with uuid and complex names
-        List<DirectoryNodeDto> leafs = normalizeDirectoriesNames();
-        traverseAndMigrate(directoryPath);
+        for (Path directoryPath : directories) {
+            log.info("Working on {}", directoryPath);
+            log.info("Normalizing folder names...");
+            List<DirectoryNodeDto> leafs = normalizeDirectoriesNames();
+            log.info("Migrating...");
+            traverseAndMigrate(directoryPath);
+        }
     }
 
 
@@ -210,7 +215,7 @@ public class MigratePhysicalDataService {
 
         String filename = fileDto.getName();
         String mimeType = fileDto.getMimeType();
-        // Could raise NullPointerException
+        // Could raise NullPointerException, ClassCastException but dtos have valid mimetypes
         String extension = typeMappingService.getFileExtension(mimeType);
 
         if (filename.endsWith(extension)) {

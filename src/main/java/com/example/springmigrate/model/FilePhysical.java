@@ -4,8 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.io.FilenameUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -22,16 +25,6 @@ public class FilePhysical {
     /**
      * Constructor
      *
-     * @param fullName filename with extension
-     * @param filePath absolute path
-     */
-    public FilePhysical(@NotNull String fullName, @NotNull Path filePath) {
-
-    }
-
-    /**
-     * Constructor
-     *
      * @param name file name without extension
      * @param extension extension
      * @param filePath absolute path
@@ -43,7 +36,7 @@ public class FilePhysical {
     }
 
     public String getFileName() {
-        return name.concat(extension);
+        return extension == null ? name : name.concat(extension);
     }
 
     public Path getAbsolutePath() {
@@ -54,7 +47,17 @@ public class FilePhysical {
         return Paths.get(parentDirectory.getFullPath(), getName());
     }
 
+    public Boolean isFullNameWithExtension() {
+        String extension = FilenameUtils.getExtension(this.getAbsolutePath().toString());
+
+        return !extension.isBlank();
+    }
+
     private Path getFileNamePath() {
         return Paths.get(this.getFileName());
+    }
+
+    public String getParentPath() {
+        return this.parentDirectory.getFullPath();
     }
 }

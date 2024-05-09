@@ -13,5 +13,6 @@ import lombok.*;
 public class RootNodeDto extends AbstractEntityDto {
 
     private Boolean active = true;
-    private DirectoryNodeDto directoryNodeDto;
+    private String pathBase;
+    private DirectoryNodeDto directory;
 }

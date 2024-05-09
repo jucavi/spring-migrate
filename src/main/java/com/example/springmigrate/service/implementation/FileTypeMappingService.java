@@ -1,6 +1,7 @@
 package com.example.springmigrate.service.implementation;
 
 import com.example.springmigrate.service.IFileTypeLogicalService;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -16,7 +17,7 @@ public class FileTypeMappingService {
         this.types = service.findAllFileTypes();
     }
 
-    public String getFileExtension(String mimeType) {
+    public String getFileExtension(@NotNull String mimeType) throws ClassCastException {
         return types.get(mimeType);
     }
 }

@@ -8,6 +8,9 @@ import okhttp3.ResponseBody;
 import org.springframework.stereotype.Component;
 import retrofit2.Call;
 import retrofit2.Response;
+import retrofit2.http.Body;
+import retrofit2.http.DELETE;
+import retrofit2.http.POST;
 
 import java.io.IOException;
 import java.net.ConnectException;
@@ -52,6 +55,22 @@ public class ApiRootDirectoryHttpClient {
     public void apiDeleteByDirectoryId(String id) throws IOException {
 
         Call<ResponseBody> call = httpClient.deleteByDirectoryId(id);
+        Response<ResponseBody> response = call.execute();
+    }
+
+    public RootNodeDto createRoot(@Body RootNodeDto rootNode) throws IOException {
+        Call<RootNodeDto> call = httpClient.createRoot(rootNode);
+        Response<RootNodeDto> response = call.execute();
+
+        if (!response.isSuccessful()) {
+            return null;
+        }
+
+        return response.body();
+    }
+
+    public void truncate() throws IOException {
+        Call<ResponseBody> call = httpClient.truncate();
         Response<ResponseBody> response = call.execute();
     }
 }

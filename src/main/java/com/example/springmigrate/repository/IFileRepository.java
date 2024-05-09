@@ -1,5 +1,6 @@
 package com.example.springmigrate.repository;
 
+import com.example.springmigrate.dto.FileFilterDto;
 import com.example.springmigrate.dto.FileNodeDto;
 
 import java.io.IOException;
@@ -13,6 +14,15 @@ public interface IFileRepository {
      * @return list of file nodes
      */
     List<FileNodeDto> findAll() throws IOException;
+
+
+    /**
+     * Find a list of files tah meet filter requirements
+     *
+     * @param filter filter
+     * @return list of files tah meet filter requirements
+     */
+    List<FileNodeDto> findFilesByFilter(FileFilterDto filter) throws IOException;
 
 
     /**

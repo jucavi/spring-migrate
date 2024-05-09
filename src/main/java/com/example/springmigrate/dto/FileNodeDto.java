@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 
@@ -26,4 +28,5 @@ public class FileNodeDto extends AbstractEntityDto {
     private String pathBase;
     private Integer version;
     List<FileExportDto> fileExports;
+
 }

@@ -29,8 +29,13 @@ public class RootDirectoryServiceImpl implements IRootDirectoryService {
     }
 
     @Override
-    public void deleteAll() {
-        throw new RuntimeException("Not implemented yet");
+    public void truncate() throws IOException {
+        repository.truncate();
+    }
+
+    @Override
+    public RootNodeDto createRoot(RootNodeDto rootNode) throws IOException {
+        return repository.createRoot(rootNode);
     }
 
     @Override

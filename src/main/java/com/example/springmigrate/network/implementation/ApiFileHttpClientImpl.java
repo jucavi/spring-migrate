@@ -1,6 +1,7 @@
 package com.example.springmigrate.network.implementation;
 
 import com.example.springmigrate.config.utils.RetrofitClient;
+import com.example.springmigrate.dto.FileFilterDto;
 import com.example.springmigrate.dto.FileNodeDto;
 import com.example.springmigrate.network.IFileHttpClient;
 import lombok.extern.log4j.Log4j2;
@@ -26,7 +27,20 @@ public class ApiFileHttpClientImpl {
 
     public List<FileNodeDto> apiFindFiles() throws IOException {
 
-        Call<List<FileNodeDto>> call = httpClient.finFiles();
+        Call<List<FileNodeDto>> call = httpClient.findFiles();
+        Response<List<FileNodeDto>> response = call.execute();
+
+        //log.info("#apiFindTypes: {}", response.code());
+        if (!response.isSuccessful()) {
+            return null;
+        }
+
+        return response.body();
+    }
+
+    public List<FileNodeDto> apiFindFilesByFilter(FileFilterDto filter) throws IOException {
+
+        Call<List<FileNodeDto>> call = httpClient.findFilesByFilter(filter);
         Response<List<FileNodeDto>> response = call.execute();
 
         //log.info("#apiFindTypes: {}", response.code());

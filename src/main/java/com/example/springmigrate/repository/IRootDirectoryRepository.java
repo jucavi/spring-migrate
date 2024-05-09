@@ -26,4 +26,7 @@ public interface IRootDirectoryRepository {
      * Deletes root directory by directory child Id
      */
     void deleteByDirectoryId(String directoryId) throws IOException;
+
+    void truncate() throws IOException;
+    RootNodeDto createRoot(RootNodeDto rootNode) throws IOException;
 }
