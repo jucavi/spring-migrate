@@ -1,0 +1,11 @@
+echo "Archivos en latest/: "
+sudo find /opt/tools/tomcat/latest/ -type f | wc -l;
+
+echo "Archivos en GestorDocumental/: "
+sudo find /root/GestorDocumental/ -type f | wc -l;
+
+echo "Archivos-total en old/: "
+sudo find /old/ -type f | wc -l;
+
+echo "Archivos-solo en old/notfound/: "
+sudo find /old/notfound -type f | wc -l;

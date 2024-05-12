@@ -1,0 +1,7 @@
+echo "Deleting..."
+sudo rm -rf /opt/tools/tomcat/latest/*
+sudo rm -rf /root/GestorDocumental/*
+sudo rm -rf /old
+echo "Copying..."
+sudo cp -R archivos/Documents/* /opt/tools/tomcat/latest/
+sudo cp -R archivos/GestorDocumental/* /root/GestorDocumental
