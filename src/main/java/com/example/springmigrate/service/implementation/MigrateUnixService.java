@@ -61,9 +61,9 @@ public class MigrateUnixService {
         setupNodes(pathBase, foundDirectoryName, notFoundDirectoryName);
         makeMigration(directories);
         log.info("Deleting roots...");
-        deleteRoots();
+        //deleteRoots();
         log.info("Deleting Directories...");
-        deleteDirectories();
+        //deleteDirectories();
     }
 
     /**
@@ -156,20 +156,11 @@ public class MigrateUnixService {
                 try {
                     if (isValidUUID(filePhysicalUUID.getName())) {
 
-                        migrateData(filePhysicalUUID);
+                        migrateDataByUUID(filePhysicalUUID);
 
                     } else {
-                        // find all candidates whose names can match the physical file
-                        List<FileNodeDto> candidateFiles = findCandidateFilesByFilter(filePhysicalUUID);
 
-                        if (candidateFiles != null && !candidateFiles.isEmpty()) {
-                            // iterate over
-                            for (FileNodeDto candidate : candidateFiles) {
-
-                                // update logical into /foundDirectory or /notFoundDirectory and move in physical storage
-                                updateNodeAndMoveToPhysicalPath(candidate, filePhysicalUUID);
-                            }
-                        }
+                        migrateDataByName(filePhysicalUUID);
 
                     }
 
@@ -189,6 +180,20 @@ public class MigrateUnixService {
                 traverse(path);
             }
 
+        }
+    }
+
+    private void migrateDataByName(FilePhysical filePhysicalUUID) throws IOException {
+        // find all candidates whose names can match the physical file
+        List<FileNodeDto> candidateFiles = findCandidateFilesByFilter(filePhysicalUUID);
+
+        if (candidateFiles != null && !candidateFiles.isEmpty()) {
+            // iterate over
+            for (FileNodeDto candidate : candidateFiles) {
+
+                // update logical into /foundDirectory or /notFoundDirectory and move in physical storage
+                updateNodeAndMoveToPhysicalPath(candidate, filePhysicalUUID);
+            }
         }
     }
 
@@ -346,15 +351,16 @@ public class MigrateUnixService {
      * @param filePhysicalUUID physical file with uuid as filename
      * @throws IOException I/O exception during service call
      */
-    private void migrateData(@NotNull FilePhysical filePhysicalUUID) throws IOException, IllegalArgumentException {
+    private void migrateDataByUUID(@NotNull FilePhysical filePhysicalUUID) throws IOException, IllegalArgumentException {
         // find logical file by uuid
         try {
             //TODO OJO CON LOS LOWER CASE!!!!!!
             FileNodeDto dto = fileLogicalService.findFileById(filePhysicalUUID.getName());
 
-            // If UUID doesn't exist move but not else
+            // If UUID doesn't exist
             if (dto == null) {
-                movePhysicalFile(filePhysicalUUID, filePhysicalUUID.getName().toLowerCase(), unixRoot.getDirectory());
+                // try to find by name and migrate
+                migrateDataByName(filePhysicalUUID);
 
             } else {
                 // complete filename with extension from database information, and with unix root parent
@@ -414,7 +420,7 @@ public class MigrateUnixService {
      */
     private PhysicalLogicalDirectoryDto makeDirectoryScaffold(String name, String basePath) throws IOException {
 
-        Path directoryPath = Paths.get(name);
+        Path directoryPath = Paths.get(basePath, name);
         boolean directoryCreated;
 
         DirectoryPhysical directoryPhysical = new DirectoryPhysical(directoryPath);
