@@ -73,6 +73,11 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
         return repository.findAllDirectoriesByFilter(filter);
     }
 
+    @Override
+    public void deleteDirectory(String id) throws IOException {
+        repository.deleteDirectory(id);
+    }
+
     /**
      * Deletes directory from database
      *

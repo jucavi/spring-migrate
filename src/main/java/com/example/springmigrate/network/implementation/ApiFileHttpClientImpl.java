@@ -3,6 +3,7 @@ package com.example.springmigrate.network.implementation;
 import com.example.springmigrate.config.utils.RetrofitClient;
 import com.example.springmigrate.dto.FileFilterDto;
 import com.example.springmigrate.dto.FileNodeDto;
+import com.example.springmigrate.dto.PaginatedListDto;
 import com.example.springmigrate.network.IFileHttpClient;
 import lombok.extern.log4j.Log4j2;
 import okhttp3.ResponseBody;
@@ -40,15 +41,15 @@ public class ApiFileHttpClientImpl {
 
     public List<FileNodeDto> apiFindFilesByFilter(FileFilterDto filter) throws IOException {
 
-        Call<List<FileNodeDto>> call = httpClient.findFilesByFilter(filter);
-        Response<List<FileNodeDto>> response = call.execute();
+        Call<PaginatedListDto<FileNodeDto>> call = httpClient.findFilesByFilter(filter);
+        Response<PaginatedListDto<FileNodeDto>> response = call.execute();
 
         //log.info("#apiFindTypes: {}", response.code());
-        if (!response.isSuccessful()) {
+        if (!response.isSuccessful() || response.body() == null) {
             return null;
         }
 
-        return response.body();
+        return response.body().getResults();
     }
 
     public FileNodeDto apiCreateFile(FileNodeDto dto) throws IOException {

@@ -60,10 +60,9 @@ public class MigrateUnixService {
         log.info("Creating root directory...");
         setupNodes(pathBase, foundDirectoryName, notFoundDirectoryName);
         makeMigration(directories);
-        log.info("Deleting roots...");
-        //deleteRoots();
+        deleteRoots();
         log.info("Deleting Directories...");
-        //deleteDirectories();
+        deleteDirectories();
     }
 
     /**
@@ -76,12 +75,14 @@ public class MigrateUnixService {
         String directoryId = unixRoot.getNode().getId();
 
         for (DirectoryNodeDto directory : unlinkedDirectories) {
-            if (!directory.getId().equals(directoryId)) {
+            if (!directory.getId().equals(directoryId) || directory.getParentDirectoryId().equals(directoryId)) {
+
                 try {
-                    directoryLogicalService.deleteDirectoryHard(directory.getId());
+                    //directoryLogicalService.deleteDirectoryHard(directory.getId());
+                    directoryLogicalService.deleteDirectory(directory.getId());
                     log.info("Deleting... {}", directory.getId());
                 } catch (Exception ex) {
-                    log.error("Error deleting {}", directory.getId());
+                    log.error("Error deleting {}, must be unlinked directory", directory.getId());
                 }
             }
         }
@@ -94,10 +95,12 @@ public class MigrateUnixService {
      */
     private void deleteRoots() throws IOException {
 
+//        unlinkedDirectories = directoryLogicalService.findALl();
+//
 //        List<RootNodeDto> roots = rootDirectoryService.findAll();
 //
 //        assert unixRoot != null;
-//        String directoryId = unixRoot.getRootNode().getId();
+//        String directoryId = unixRoot.getNode().getId();
 //
 //        for (RootNodeDto root : roots) {
 //            String childDirectoryId = root.getDirectory().getId();
@@ -107,8 +110,10 @@ public class MigrateUnixService {
 //            }
 //        }
 
+        log.info("Searching for directories...");
         unlinkedDirectories = directoryLogicalService.findALl();
 
+        log.info("Deleting roots...");
         rootDirectoryService.truncate();
         RootNodeDto root = new RootNodeDto();
         root.setPathBase(unixRoot.getNode().getPathBase());
@@ -174,9 +179,10 @@ public class MigrateUnixService {
 
 
             } else { // FOLDERS LOGIC
-                if (isValidUUID(filePhysicalUUID.getName())) {
-                    path = renamePhysicalDirectoryNamedWithUUID(path);
-                }
+//                if (isValidUUID(filePhysicalUUID.getName())) {
+//                    log.info("Renaming physical directory...");
+//                    path = renamePhysicalDirectoryNamedWithUUID(path);
+//                }
                 traverse(path);
             }
 
@@ -190,9 +196,12 @@ public class MigrateUnixService {
         if (candidateFiles != null && !candidateFiles.isEmpty()) {
             // iterate over
             for (FileNodeDto candidate : candidateFiles) {
-
-                // update logical into /foundDirectory or /notFoundDirectory and move in physical storage
-                updateNodeAndMoveToPhysicalPath(candidate, filePhysicalUUID);
+                try {
+                    // update logical into /foundDirectory or /notFoundDirectory and move in physical storage
+                    updateNodeAndMoveToPhysicalPath(candidate, filePhysicalUUID);
+                } catch (IOException ex) {
+                    log.error("Error #migrateDataByName {}", filePhysicalUUID.getAbsolutePath());
+                }
             }
         }
     }
@@ -219,13 +228,16 @@ public class MigrateUnixService {
                 .toLowerCase();
 
         boolean nameExist =  (physicalName.equals(nodeName) || physicalName.equals(fullNodeName));
-        boolean isPathBaseEquals = filePhysical.getParentPath()
-                .equals(dto.getPathBase());
+        boolean isPathBaseEquals = filePhysical.getParentPath().replace(File.separator, "")
+                .equals(dto.getPathBase().replace(File.separator, ""));
 
         DirectoryPhysical directory;
 
+        FilePhysical renamedPhysical  = getPathNameIfDuplicatedFile(filePhysical);
+
         // node found in database
         if (nameExist && isPathBaseEquals) {
+            dto.setName(renamedPhysical.getFileName());
             // Update dto with invalid UUID into database and set parent root
             dto.setParentDirectoryId(unixRoot.getNode().getId());
             directory = unixRoot.getDirectory();
@@ -234,16 +246,22 @@ public class MigrateUnixService {
             // update parent directory to not found
             dto.setParentDirectoryId(unixRootNotFound.getNode().getId());
             directory = unixRootNotFound.getDirectory();
-            filePhysical.setParentDirectory(unixRootNotFound.getDirectory());
+            renamedPhysical.setParentDirectory(unixRootNotFound.getDirectory());
         }
 
-        FileNodeDto updated = fileLogicalService.updateFile(dto);
+        try {
+            FileNodeDto updated = fileLogicalService.updateFile(dto);
 
-        if (updated == null) {
-            log.error("Unable to update candidate node: {}", dto.getId());
+            if (updated == null) {
+                log.error("Unable to update candidate node: {}", dto.getId());
+            }
+
+            movePhysicalFile(filePhysical, renamedPhysical.getFileName(), directory);
+
+        } catch (IOException ex) {
+            log.error("Error #updateNodeAndMoveToPhysicalPath {}", filePhysical.getAbsolutePath());
         }
 
-        movePhysicalFile(filePhysical, filePhysical.getName(), directory);
     }
 
     /**
@@ -254,6 +272,7 @@ public class MigrateUnixService {
      * @throws IOException if I/O exception occurred
      */
     private String createPhysicalNameWithExtension(FilePhysical filePhysical) throws IOException {
+
         String physicalName = filePhysical.getName();
         String mimeType = Files.probeContentType(filePhysical.getAbsolutePath());
 
@@ -295,26 +314,43 @@ public class MigrateUnixService {
     /**
      * Rename folder with UUID
      *
-     * @param path directory path
+     * @param sourceDir directory path
      * @return directory name extracted from database
      */
-    private Path renamePhysicalDirectoryNamedWithUUID(@NotNull Path path) {
+    private Path renamePhysicalDirectoryNamedWithUUID(@NotNull Path sourceDir) {
+        Path targetDir;
+
         try {
-            DirectoryNodeDto dto = directoryLogicalService.findDirectoryById(path.getFileName().toString());
+            DirectoryNodeDto dto = directoryLogicalService.findDirectoryById(sourceDir.getFileName().toString());
 
             if (dto != null) {
-                Path newName = path.resolveSibling(dto.getName());
+                targetDir = sourceDir.resolveSibling(dto.getName());
 
-                // Update physical folder name
-                Files.move(path, newName);
+                if (!Files.exists(targetDir)) {
+                    // Update physical folder name
+                    Files.createDirectories(targetDir);
+                    Files.move(sourceDir, targetDir, StandardCopyOption.REPLACE_EXISTING);
+                } else {
+                    Files.walk(sourceDir)
+                            .forEach(source -> {
+                                try {
+                                    Path target = targetDir.resolve(sourceDir.relativize(source));
+                                    Files.move(source, target);
+                                } catch (IOException e) {
+                                    //log.error("Unable to copy form source to target directory");
+                                }
+                            });
 
-                return newName;
+                    Files.deleteIfExists(sourceDir);
+                }
+                return targetDir;
             }
         } catch (IOException e) {
+            //log.error("Unable to rename {}: {}", sourceDir, e.getMessage());
             // can't rename a directory
         }
 
-        return path;
+        return sourceDir;
     }
 
     /**
@@ -360,7 +396,8 @@ public class MigrateUnixService {
             // If UUID doesn't exist
             if (dto == null) {
                 // try to find by name and migrate
-                migrateDataByName(filePhysicalUUID);
+                movePhysicalFile(filePhysicalUUID, filePhysicalUUID.getName().toLowerCase(), unixRootNotFound.getDirectory());
+                //migrateDataByName(filePhysicalUUID);
 
             } else {
                 // complete filename with extension from database information, and with unix root parent

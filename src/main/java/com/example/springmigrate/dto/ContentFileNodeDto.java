@@ -13,7 +13,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ContentFileNodeDto {
 
-    private Boolean active = true;
+    private Boolean active;
     private String exactName;
     private Integer fileTypeId;
     private String fromDateTime;
@@ -22,5 +22,5 @@ public class ContentFileNodeDto {
     private String name;
     private String parentDirectoryId;
     private String untilDateTime;
-    private Integer version = 0;
+    private Integer version;
 }
