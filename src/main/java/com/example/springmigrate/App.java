@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -143,7 +144,7 @@ class Command implements Runnable {
 
 	private final MigratePhysicalDataService normalMigrate;
 	private final MigrateUnixService customMigrate;
-	private final String root = System.getenv("SystemDrive");
+	private final String root;
 
 	@Option(names = {"-u", "--url"}, description = "URL de la API", defaultValue = "http://localhost:9004/")
 	private String url;
@@ -164,6 +165,9 @@ class Command implements Runnable {
 	public Command(MigratePhysicalDataService normalMigrate, MigrateUnixService customMigrate) {
 		this.normalMigrate = normalMigrate;
 		this.customMigrate = customMigrate;
+
+		File[] roots = File.listRoots();
+		this.root = roots[0].getAbsolutePath();
 	}
 
 	@Override
@@ -175,9 +179,11 @@ class Command implements Runnable {
 
 		try {
 			if (custom) {
+
 				customMigrate.migrate(root, foundDirectoryName, notFoundDirectoryName, paths);
+
 			} else {
-				// TODO START HERE
+
 				normalMigrate.migrate(paths);
 			}
 		} catch (IOException e) {
