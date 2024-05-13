@@ -14,10 +14,13 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.FileFilter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Log4j2
@@ -69,6 +72,34 @@ public class MigrateUnixService {
         deleteRoots();
         log.info("Deleting Directories...");
         deleteDirectories();
+
+        // Show statistics
+        resume(directories);
+    }
+
+    private void resume(List<Path> directories) {
+
+        File file = new File(unixRoot.getDirectory().getFullPath());
+        int foundedFiles = Objects.requireNonNull(file.listFiles(File::isFile)).length;
+
+        file = new File(unixDirectoryNotFoundInDatabase.getFullPath());
+        int notFoundedFiles = Objects.requireNonNull(file.listFiles(File::isFile)).length;
+
+        log.info("After Migrate");
+        for (Path directory : directories) {
+            try (Stream<Path> files = Files.walk(directory).parallel().filter(p -> p.toFile().isFile())) {
+                long numFiles = files.count();
+                log.info("Total files remaining in {}: {}", directory, numFiles);
+
+            } catch (IOException ex) {
+                //
+            }
+        }
+
+        log.info("Total files processed: {}", foundedFiles + notFoundedFiles);
+        log.info("Founded files in database(/old): {}", foundedFiles);
+        log.info("Missing files in databases(/notfound/database): {}", notFoundedFiles);
+
     }
 
     /**
@@ -269,24 +300,24 @@ public class MigrateUnixService {
                 .equals(dto.getPathBase().replace(File.separator, ""));
 
         // rename it if exists in physical
-        FilePhysical renamePhysical = getPathNameIfDuplicatedFile(filePhysical);
+        //FilePhysical renamePhysical = getPathNameIfDuplicatedFile(filePhysical);
 
         DirectoryPhysical directory;
         // node found in database
         if (nameExist && isPathBaseEquals) {
-            // Update dto with invalid UUID into database and set parent root
-            dto.setName(renamePhysical.getFileName()); // lowercased
-            dto.setParentDirectoryId(unixRoot.getNode().getId());
 
             try { // error debug
+                FilePhysical moved = movePhysicalFile(filePhysical, filePhysical.getName(), unixRoot.getDirectory());
+
                 // update directory
+                // Update dto with invalid UUID into database and set parent root
+                dto.setName(moved.getFileName()); // lowercased
+                dto.setParentDirectoryId(unixRoot.getNode().getId());
                 FileNodeDto updated = fileLogicalService.updateFile(dto);
 
                 if (updated == null) {
-                    log.error("Unable to update candidate node, mut move to physical folder: {}", dto.getId());
+                    log.error("Unable to update candidate node, but already move to physical folder: {}", dto.getId());
                 }
-
-                movePhysicalFile(filePhysical, filePhysical.getName(), unixRoot.getDirectory());
 
                 return true;
 
@@ -375,7 +406,7 @@ public class MigrateUnixService {
      * @param file file
      * @throws IOException if IOException occurred
      */
-    private void movePhysicalFile(@NotNull FilePhysical file, @NotNull String newName, @NotNull DirectoryPhysical parent) throws IOException {
+    private FilePhysical movePhysicalFile(@NotNull FilePhysical file, @NotNull String newName, @NotNull DirectoryPhysical parent) throws IOException {
 
         Path originPath = file.getAbsolutePath();
         Path destinyPath = Paths.get(parent.getFullPath(), newName.toLowerCase());
@@ -387,11 +418,15 @@ public class MigrateUnixService {
 
             Files.move(originPath, renamed.getAbsolutePath());
 
-        } else {
-
-            // Renames physical not uuid filename with updated data logical
-            Files.move(originPath, destinyPath);
+            return renamed;
         }
+
+        // Renames physical not uuid filename with updated data logical
+        Files.move(originPath, destinyPath);
+
+        file.setName(newName.toLowerCase());
+        file.setParentDirectory(parent);
+        return file;
     }
 
 

@@ -4,7 +4,6 @@ import com.example.springmigrate.config.utils.ApiUrl;
 import com.example.springmigrate.service.implementation.MigratePhysicalDataService;
 import com.example.springmigrate.service.implementation.MigrateUnixService;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
