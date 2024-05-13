@@ -22,5 +22,5 @@ public class ContentFileNodeDto {
     private String name;
     private String parentDirectoryId;
     private String untilDateTime;
-    private Integer version = 0;
+    private Integer version;
 }

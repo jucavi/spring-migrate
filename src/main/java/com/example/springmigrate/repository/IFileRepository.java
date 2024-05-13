@@ -53,8 +53,7 @@ public interface IFileRepository {
 
 
     /**
-    /**
-     * Delete file by identifier
+     * Delete file by identifier(Soft)
      *
      * @param uuid identifier
      */

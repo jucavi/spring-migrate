@@ -8,7 +8,9 @@ import com.example.springmigrate.service.IDirectoryLogicalService;
 import com.example.springmigrate.service.IFileLogicalService;
 import com.example.springmigrate.service.IRootDirectoryService;
 import lombok.extern.log4j.Log4j2;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -25,9 +27,12 @@ public class MigrateUnixService {
     private final IFileLogicalService fileLogicalService;
     private final FileTypeMappingService typeMappingService;
     private final IRootDirectoryService rootDirectoryService;
+
     private PhysicalLogicalDirectoryDto unixRoot;
-    private PhysicalLogicalDirectoryDto unixRootNotFound;
+    private DirectoryNodeDto directoryNotFoundLogical;
+    private DirectoryPhysical unixDirectoryNotFoundInDatabase;
     private List<DirectoryNodeDto> unlinkedDirectories;
+    private List<FileNodeDto> unlinkedFiles;
 
     /**
      * Constructor
@@ -57,7 +62,7 @@ public class MigrateUnixService {
             throws IOException, NoRequirementsMeted {
 
         // Create logical and physical node
-        log.info("Creating root directory...");
+        log.info("Creating directories...");
         setupNodes(pathBase, foundDirectoryName, notFoundDirectoryName);
         makeMigration(directories);
         log.info("Deleting roots...");
@@ -73,13 +78,17 @@ public class MigrateUnixService {
      */
     private void deleteDirectories() throws IOException {
 
-        String directoryId = unixRoot.getNode().getId();
+        String foundId = unixRoot.getNode().getId();
+        String notFoundId = directoryNotFoundLogical.getId();
 
         for (DirectoryNodeDto directory : unlinkedDirectories) {
-            if (!directory.getId().equals(directoryId)) {
+            // directory is one of new nodes created
+            String id = directory.getId();
+            boolean isNewNode = id.equals(foundId) || id.equals(notFoundId);
+
+            if (!isNewNode) {
                 try {
-                    directoryLogicalService.deleteDirectoryHard(directory.getId());
-                    log.info("Deleting... {}", directory.getId());
+                    directoryLogicalService.deleteDirectoryHard(id);
                 } catch (Exception ex) {
                     log.error("Error deleting {}", directory.getId());
                 }
@@ -94,22 +103,18 @@ public class MigrateUnixService {
      */
     private void deleteRoots() throws IOException {
 
-//        List<RootNodeDto> roots = rootDirectoryService.findAll();
-//
-//        assert unixRoot != null;
-//        String directoryId = unixRoot.getRootNode().getId();
-//
-//        for (RootNodeDto root : roots) {
-//            String childDirectoryId = root.getDirectory().getId();
-//
-//            if (!childDirectoryId.equals(directoryId)) {
-//                rootDirectoryService.deleteByDirectoryId(childDirectoryId);
-//            }
-//        }
-
+        // Get all directories before unlink them from root
         unlinkedDirectories = directoryLogicalService.findALl();
+        // Get all files before unlink from root
+        unlinkedFiles = fileLogicalService.findAll();
 
+        // Move files that have a parent yet
+        moveLinkedDirectoriesToNotFound();
+
+        // delete root data
         rootDirectoryService.truncate();
+
+        // create again root directory
         RootNodeDto root = new RootNodeDto();
         root.setPathBase(unixRoot.getNode().getPathBase());
         root.setDirectory(unixRoot.getNode());
@@ -118,15 +123,35 @@ public class MigrateUnixService {
     }
 
     /**
+     * Move to {@code directoryNotFoundLogical} files that can not find in physical storage
+     *
+     * @throws IOException if IOException occurred
+     */
+    private void moveLinkedDirectoriesToNotFound() throws IOException {
+
+        String directoryFoundId = unixRoot.getNode().getId();
+        String directoryNotFoundId = directoryNotFoundLogical.getId();
+
+        for (FileNodeDto child : unlinkedFiles) {
+            String parentId = child.getParentDirectoryId();
+
+            if (!parentId.equals(directoryFoundId) && !parentId.equals(directoryNotFoundId)) {
+                child.setParentDirectoryId(directoryNotFoundId);
+                fileLogicalService.updateFile(child);
+            }
+        }
+    }
+
+    /**
      * Makes migration process
      *
      * @param directories list of all path to migrate
      */
-    private void makeMigration(List<Path> directories) {
+    private void makeMigration(@NotNull List<Path> directories) {
 
         for (Path directory : directories) {
 
-            log.info("Working on {}", directory);
+            log.info("Working on {}...", directory);
             log.info("Migrating files...");
             traverse(directory);
         }
@@ -156,21 +181,11 @@ public class MigrateUnixService {
                 try {
                     if (isValidUUID(filePhysicalUUID.getName())) {
 
-                        migrateData(filePhysicalUUID);
+                        migrateDataByUUID(filePhysicalUUID);
 
                     } else {
-                        // find all candidates whose names can match the physical file
-                        List<FileNodeDto> candidateFiles = findCandidateFilesByFilter(filePhysicalUUID);
 
-                        if (candidateFiles != null && !candidateFiles.isEmpty()) {
-                            // iterate over
-                            for (FileNodeDto candidate : candidateFiles) {
-
-                                // update logical into /foundDirectory or /notFoundDirectory and move in physical storage
-                                updateNodeAndMoveToPhysicalPath(candidate, filePhysicalUUID);
-                            }
-                        }
-
+                        migrateDataByName(filePhysicalUUID);
                     }
 
                 } catch (IllegalArgumentException ex) {
@@ -183,12 +198,39 @@ public class MigrateUnixService {
 
 
             } else { // FOLDERS LOGIC
-                if (isValidUUID(filePhysicalUUID.getName())) {
-                    path = renamePhysicalDirectoryNamedWithUUID(path);
-                }
+//                if (isValidUUID(filePhysicalUUID.getName())) {
+//                    path = renamePhysicalDirectoryNamedWithUUID(path);
+//                }
                 traverse(path);
             }
 
+        }
+    }
+
+    private void migrateDataByName(FilePhysical filePhysicalUUID) {
+        try {
+            // find all candidates whose names can match the physical file
+            List<FileNodeDto> candidateFiles = findCandidateFilesByFilterName(filePhysicalUUID);
+            Boolean isUpdated = false;
+
+            if (candidateFiles != null) {
+                // iterate over
+                for (FileNodeDto candidate : candidateFiles) {
+
+                    // update logical into /foundDirectory or /notFoundDirectory and move in physical storage
+                    isUpdated = updateNodeAndMoveToPhysicalPath(candidate, filePhysicalUUID);
+
+                    if (Boolean.TRUE.equals(isUpdated)) {
+                        return;
+                    }
+                }
+            }
+
+            movePhysicalFile(filePhysicalUUID, filePhysicalUUID.getName(), unixDirectoryNotFoundInDatabase);
+
+        } catch (Exception ex) {
+            // retrofit exception
+            log.error("Retrofit exception when find by name in database: {}", ex.getMessage());
         }
     }
 
@@ -199,7 +241,8 @@ public class MigrateUnixService {
      * @param filePhysical physical file object
      * @throws IOException if I/O exception occurred
      */
-    private void updateNodeAndMoveToPhysicalPath(FileNodeDto dto, FilePhysical filePhysical)
+    @Nullable
+    private Boolean updateNodeAndMoveToPhysicalPath(@NotNull FileNodeDto dto, FilePhysical filePhysical)
             throws IOException {
 
         String physicalName = createPhysicalNameWithExtension(filePhysical);
@@ -213,32 +256,46 @@ public class MigrateUnixService {
                         typeMappingService.getFileExtension(dto.getMimeType()))
                 .toLowerCase();
 
+        boolean alreadyProcessed = dto.getParentDirectoryId().equals(unixRoot.getNode().getId())
+                || dto.getParentDirectoryId().equals(directoryNotFoundLogical.getId());
+
+        if (alreadyProcessed) {
+            log.info("Node already processed {}", filePhysical.getAbsolutePath());
+            return null;
+        }
+
         boolean nameExist =  (physicalName.equals(nodeName) || physicalName.equals(fullNodeName));
-        boolean isPathBaseEquals = filePhysical.getParentPath()
-                .equals(dto.getPathBase());
+        boolean isPathBaseEquals = filePhysical.getParentPath().replace(File.separator, "")
+                .equals(dto.getPathBase().replace(File.separator, ""));
+
+        // rename it if exists in physical
+        FilePhysical renamePhysical = getPathNameIfDuplicatedFile(filePhysical);
 
         DirectoryPhysical directory;
-
         // node found in database
         if (nameExist && isPathBaseEquals) {
             // Update dto with invalid UUID into database and set parent root
+            dto.setName(renamePhysical.getFileName()); // lowercased
             dto.setParentDirectoryId(unixRoot.getNode().getId());
-            directory = unixRoot.getDirectory();
 
-        } else { // node not found
-            // update parent directory to not found
-            dto.setParentDirectoryId(unixRootNotFound.getNode().getId());
-            directory = unixRootNotFound.getDirectory();
-            filePhysical.setParentDirectory(unixRootNotFound.getDirectory());
+            try { // error debug
+                // update directory
+                FileNodeDto updated = fileLogicalService.updateFile(dto);
+
+                if (updated == null) {
+                    log.error("Unable to update candidate node, mut move to physical folder: {}", dto.getId());
+                }
+
+                movePhysicalFile(filePhysical, filePhysical.getName(), unixRoot.getDirectory());
+
+                return true;
+
+            } catch (IOException ex) {
+                log.error("Error #updateNodeAndMoveToPhysicalPath {}: {}", filePhysical.getAbsolutePath(), ex.getMessage());
+            }
         }
 
-        FileNodeDto updated = fileLogicalService.updateFile(dto);
-
-        if (updated == null) {
-            log.error("Unable to update candidate node: {}", dto.getId());
-        }
-
-        movePhysicalFile(filePhysical, filePhysical.getName(), directory);
+        return false;
     }
 
     /**
@@ -248,7 +305,7 @@ public class MigrateUnixService {
      * @return filename with extension
      * @throws IOException if I/O exception occurred
      */
-    private String createPhysicalNameWithExtension(FilePhysical filePhysical) throws IOException {
+    private String createPhysicalNameWithExtension(@NotNull FilePhysical filePhysical) throws IOException {
         String physicalName = filePhysical.getName();
         String mimeType = Files.probeContentType(filePhysical.getAbsolutePath());
 
@@ -273,7 +330,7 @@ public class MigrateUnixService {
      * @return the list of logical files that match the filter requirement
      * @throws IOException if I/O exception occurred
      */
-    private List<FileNodeDto> findCandidateFilesByFilter(@NotNull FilePhysical filePhysical) throws IOException {
+    private List<FileNodeDto> findCandidateFilesByFilterName(@NotNull FilePhysical filePhysical) throws IOException {
         // Setting content for search files by name (include)
         ContentFileNodeDto content = new ContentFileNodeDto();
         content.setName(filePhysical.getName());
@@ -318,7 +375,7 @@ public class MigrateUnixService {
      * @param file file
      * @throws IOException if IOException occurred
      */
-    private void movePhysicalFile(FilePhysical file, String newName, DirectoryPhysical parent) throws IOException {
+    private void movePhysicalFile(@NotNull FilePhysical file, @NotNull String newName, @NotNull DirectoryPhysical parent) throws IOException {
 
         Path originPath = file.getAbsolutePath();
         Path destinyPath = Paths.get(parent.getFullPath(), newName.toLowerCase());
@@ -346,7 +403,7 @@ public class MigrateUnixService {
      * @param filePhysicalUUID physical file with uuid as filename
      * @throws IOException I/O exception during service call
      */
-    private void migrateData(@NotNull FilePhysical filePhysicalUUID) throws IOException, IllegalArgumentException {
+    private void migrateDataByUUID(@NotNull FilePhysical filePhysicalUUID) throws IOException, IllegalArgumentException {
         // find logical file by uuid
         try {
             //TODO OJO CON LOS LOWER CASE!!!!!!
@@ -354,7 +411,8 @@ public class MigrateUnixService {
 
             // If UUID doesn't exist move but not else
             if (dto == null) {
-                movePhysicalFile(filePhysicalUUID, filePhysicalUUID.getName().toLowerCase(), unixRoot.getDirectory());
+                //movePhysicalFile(filePhysicalUUID, filePhysicalUUID.getName().toLowerCase(), unixRoot.getDirectory());
+                migrateDataByName(filePhysicalUUID);
 
             } else {
                 // complete filename with extension from database information, and with unix root parent
@@ -400,7 +458,9 @@ public class MigrateUnixService {
             throws IOException, NoRequirementsMeted {
 
         unixRoot = makeDirectoryScaffold(foundDirectoryName, pathBase);
-        unixRootNotFound = makeDirectoryScaffold(notFoundDirectoryName, Paths.get(pathBase, foundDirectoryName).toString());
+        //directoryNotFoundLogical = makeDirectoryScaffold(notFoundDirectoryName, Paths.get(pathBase, foundDirectoryName).toString());
+        directoryNotFoundLogical = createLogicalNode(notFoundDirectoryName, Paths.get(pathBase, foundDirectoryName).toString());
+        unixDirectoryNotFoundInDatabase = createDirectoryPhysical(Paths.get(pathBase, foundDirectoryName, notFoundDirectoryName, "database"));
 
     }
 
@@ -412,12 +472,50 @@ public class MigrateUnixService {
      * @return logical and physical object
      * @throws IOException if I/O exception occurred
      */
+    @NotNull
     private PhysicalLogicalDirectoryDto makeDirectoryScaffold(String name, String basePath) throws IOException {
 
-        Path directoryPath = Paths.get(name);
-        boolean directoryCreated;
+        Path directoryPath = Paths.get(basePath, name);
 
-        DirectoryPhysical directoryPhysical = new DirectoryPhysical(directoryPath);
+        DirectoryNodeDto directoryNode = createLogicalNode(name, basePath);
+        DirectoryPhysical directoryPhysical = createDirectoryPhysical(directoryPath);
+
+        return new PhysicalLogicalDirectoryDto(directoryPhysical, directoryNode);
+    }
+
+    /**
+     * Creates physical directory
+     *
+     * @param directoryPath absolute directory path
+     * @return physical directory created
+     * @throws NoRequirementsMeted if cant create a directory
+     */
+    @NotNull
+    @Contract("_ -> new")
+    private DirectoryPhysical createDirectoryPhysical(@NotNull Path directoryPath) throws NoRequirementsMeted, IOException {
+        // Attempt to create the directory
+        try {
+            if (!Files.exists(directoryPath)) {
+                Files.createDirectories(directoryPath);
+            }
+        } catch (Exception ex) {
+            throw new NoRequirementsMeted("Unable to create necessary directory");
+        }
+
+        return new DirectoryPhysical(directoryPath);
+    }
+
+
+    /**
+     * Creates if not exists logical directory
+     *
+     * @param name directory name
+     * @param basePath directory path base
+     * @return logical directory node
+     * @throws IOException if IOException occurred
+     * @throws NoRequirementsMeted if cant create a directory node
+     */
+    private DirectoryNodeDto createLogicalNode(String name, String basePath) throws IOException, NoRequirementsMeted {
         DirectoryNodeDto directoryNode = directoryLogicalService.createDirectory(name, basePath);
 
         // Could be already created
@@ -425,21 +523,12 @@ public class MigrateUnixService {
             directoryNode = directoryLogicalService.findDirectoryByBasePath(name, basePath);
         }
 
-        File directory = new File(directoryPath.toString());
-
-        // Attempt to create the directory
-        if (Files.exists(directory.toPath())) {
-            directoryCreated = true;
-        } else {
-            directoryCreated = directory.mkdir();
+        // could be integrity problems
+        if (directoryNode == null) {
+            throw new NoRequirementsMeted("Unable to create necessary node");
         }
 
-        // if directory node is null the folder already exist and could be integrity problems
-        if (!directoryCreated || directoryNode == null) {
-            throw new NoRequirementsMeted("Unable to create necessary scaffold");
-        }
-
-        return new PhysicalLogicalDirectoryDto(directoryPhysical, directoryNode);
+        return directoryNode;
     }
 
 

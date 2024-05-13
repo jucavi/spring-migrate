@@ -86,6 +86,18 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
 
 
     /**
+     * Deletes directory(Soft)
+     *
+     * @param id identifier
+     * @throws IOException if I/O exception occurred
+     */
+    @Override
+    public void deleteDirectoryById(String id) throws IOException {
+        repository.deleteDirectory(id);
+    }
+
+
+    /**
      * Find directory by identifier
      *
      * @param id identifier

@@ -3,6 +3,7 @@ package com.example.springmigrate.network;
 
 import com.example.springmigrate.dto.FileFilterDto;
 import com.example.springmigrate.dto.FileNodeDto;
+import com.example.springmigrate.dto.PaginatedListDto;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.*;
@@ -26,6 +27,6 @@ public interface IFileHttpClient {
     @DELETE("/files/{id}")
     Call<ResponseBody> deleteFileById(@Path("id") String id);
 
-    @GET("/files")
-    Call<List<FileNodeDto>> findFilesByFilter(FileFilterDto filter);
+    @POST("/files/searchAll")
+    Call<PaginatedListDto<FileNodeDto>> findFilesByFilter(@Body FileFilterDto filter);
 }

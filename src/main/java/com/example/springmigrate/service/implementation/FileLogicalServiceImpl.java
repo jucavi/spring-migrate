@@ -37,4 +37,14 @@ public class FileLogicalServiceImpl implements IFileLogicalService {
     public List<FileNodeDto> findFilesByFilter(FileFilterDto filter) throws IOException {
         return repository.findFilesByFilter(filter);
     }
+
+    @Override
+    public List<FileNodeDto> findAll() throws IOException {
+        return repository.findAll();
+    }
+
+    @Override
+    public void deleteFile(String id) throws IOException {
+        repository.deleteFile(id);
+    }
 }

@@ -17,8 +17,6 @@ public interface IDirectoryLogicalService {
     DirectoryNodeDto createDirectory(String name, String pathBase) throws IOException;
     List<DirectoryNodeDto> findAllDirectoriesByFilter(DirectoryFilterNodeDto filter) throws IOException;
     void deleteDirectoryHard(String id) throws IOException;
-
-    //DirectoryNodeDto createParentsAndRenameLeaf(DirectoryNodeDto directory) throws IOException;
-
+    void deleteDirectoryById(String id) throws IOException;
     List<DirectoryNodeDto> findChildrenDirectories(String parentId) throws IOException;
 }

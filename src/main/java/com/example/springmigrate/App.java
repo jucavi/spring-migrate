@@ -4,6 +4,8 @@ import com.example.springmigrate.config.utils.ApiUrl;
 import com.example.springmigrate.service.implementation.MigratePhysicalDataService;
 import com.example.springmigrate.service.implementation.MigrateUnixService;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,6 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 
 //@SpringBootApplication
@@ -143,7 +146,6 @@ class Command implements Runnable {
 
 	private final MigratePhysicalDataService normalMigrate;
 	private final MigrateUnixService customMigrate;
-	private final String root = System.getenv("SystemDrive");
 
 	@Option(names = {"-u", "--url"}, description = "URL de la API", defaultValue = "http://localhost:9004/")
 	private String url;
@@ -169,19 +171,67 @@ class Command implements Runnable {
 	@Override
 	public void run() {
 
+		userWarningMessage();
+
+		String root = getRoot();
 		// Bean creation to inject in Config#Retrofit
 		new ApiUrl(url);
 		List<Path> paths = Arrays.stream(directories).map(Paths::get).collect(Collectors.toList());
-
 		try {
 			if (custom) {
+				// Unix like
 				customMigrate.migrate(root, foundDirectoryName, notFoundDirectoryName, paths);
+
 			} else {
-				// TODO START HERE
+
+				// Flynka like
 				normalMigrate.migrate(paths);
 			}
+
 		} catch (IOException e) {
 			System.out.println("Error");
+		}
+	}
+
+	private static @NotNull String getRoot() {
+		String root = "/";
+		try {
+			root = Paths.get(System.getProperty("user.dir"))
+					.getFileSystem()
+					.getRootDirectories()
+					.iterator()
+					.next()
+					.toString();
+		} catch (Exception ex) {
+
+			String os = System.getProperty("os.name");
+
+			if (os.startsWith("Windows")) {
+				root = "c:/";
+			}
+		}
+
+		return root;
+	}
+
+	private void userWarningMessage() {
+
+		System.out.print("***********************************************************************************" +
+				"\n                                WARNING!!!" +
+				"\n***********************************************************************************" +
+				"\n***********************************************************************************" +
+				"\n   La ejecución de la aplicación puede producir daños en la base de datos." +
+				"\n   Antes de lanzar el script recuerde hacer una copia de seguridad de la base de   " +
+				"\n   datos y del sistema de archivos con el que se va a trabajar." +
+				"\n   Para ejecutar la aplicación son necesario permisos de administrador.             " +
+				"\n***********************************************************************************" +
+				"\n\nAún así desea ejecutar la aplicación S/n: ");
+
+		Scanner sc =new Scanner(System.in);
+		String input = sc.nextLine();
+
+		if (!input.equalsIgnoreCase("s") ) {
+			System.exit(0);
 		}
 	}
 }
