@@ -2,6 +2,7 @@ package com.example.springmigrate.config.utils;
 
 import com.example.springmigrate.config.utils.error.NoRequirementsMeted;
 import com.example.springmigrate.model.DirectoryPhysical;
+import com.example.springmigrate.model.FilePhysical;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -11,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -18,7 +20,32 @@ import java.util.stream.Stream;
 public class MigrationUtils {
 
 
+    /**
+     * Add extension to filename
+     *
+     * @param filePhysical physical file object
+     * @param mimeTypes    available mapping of mime types(mimetype, extension)
+     * @return filename with extension
+     * @throws IOException if I/O exception occurred
+     */
+    public static String setFileNameWithExtension(
+            @NotNull FilePhysical filePhysical,
+            @NotNull Map<String, String> mimeTypes) throws IOException {
 
+        String physicalName = filePhysical.getName();
+        // get mimetype from metadata
+        String mimeType = Files.probeContentType(filePhysical.getAbsolutePath());
+
+        // Try set extension
+        if (!filePhysical.isFullNameWithExtension()) {
+            try {
+                physicalName = filePhysical.getName().toLowerCase().concat(".").concat(mimeTypes.get(mimeType));
+            } catch (NullPointerException | ClassCastException ex) {
+                // mime type not present
+            }
+        }
+        return physicalName;
+    }
 
     /**
      * Creates physical directory and returns a physical directory created
@@ -46,8 +73,8 @@ public class MigrationUtils {
     /**
      * Show migration status resume
      *
-     * @param found directory where the files found in the database are stored
-     * @param notFound directory where the files not found in the database are stored
+     * @param found             directory where the files found in the database are stored
+     * @param notFound          directory where the files not found in the database are stored
      * @param sourceDirectories directories on which the migration has been performed
      */
     public static void showResume(@NotNull DirectoryPhysical found, @NotNull DirectoryPhysical notFound, @NotNull List<Path> sourceDirectories) {

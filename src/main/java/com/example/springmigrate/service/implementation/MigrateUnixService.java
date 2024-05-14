@@ -16,7 +16,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -255,7 +257,7 @@ public class MigrateUnixService {
     private Boolean updateNodeAndMoveToPhysicalPath(@NotNull FileNodeDto dto, FilePhysical filePhysical) throws IOException {
 
         //
-        String physicalName = createPhysicalNameWithExtension(filePhysical);
+        String physicalName = MigrationUtils.setFileNameWithExtension(filePhysical, mimeTypes);
         String nodeName = dto.getName();
         // Use cases:
         //      nodeName without extension (name)
@@ -302,28 +304,6 @@ public class MigrateUnixService {
         }
 
         return false;
-    }
-
-    /**
-     * Add extension to filename
-     *
-     * @param filePhysical physical file object
-     * @return filename with extension
-     * @throws IOException if I/O exception occurred
-     */
-    private String createPhysicalNameWithExtension(@NotNull FilePhysical filePhysical) throws IOException {
-        String physicalName = filePhysical.getName();
-        String mimeType = Files.probeContentType(filePhysical.getAbsolutePath());
-
-        // Try set extension
-        if (!filePhysical.isFullNameWithExtension()) {
-            try {
-                physicalName = filePhysical.getName().toLowerCase().concat(".").concat(mimeTypes.get(mimeType));
-            } catch (NullPointerException | ClassCastException ex) {
-                //
-            }
-        }
-        return physicalName;
     }
 
     /**
@@ -400,9 +380,6 @@ public class MigrateUnixService {
         file.setParentDirectory(parent);
         return file;
     }
-
-
-    // Changed
 
     /**
      * Rename physical files with uuid names based on database information.
