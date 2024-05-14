@@ -9,8 +9,6 @@ import org.springframework.stereotype.Component;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.POST;
 
 import java.io.IOException;
 import java.net.ConnectException;

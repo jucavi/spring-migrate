@@ -1,5 +1,6 @@
 package com.example.springmigrate.service.implementation;
 
+import com.example.springmigrate.config.utils.error.NoRequirementsMeted;
 import com.example.springmigrate.dto.ContentDirectoryNodeDto;
 import com.example.springmigrate.dto.DirectoryFilterNodeDto;
 import com.example.springmigrate.dto.DirectoryNodeDto;
@@ -217,5 +218,31 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
         filter.setSize(100000);
 
         return repository.findAllDirectoriesByFilter(filter);
+    }
+
+    /**
+     * Creates if not exists logical directory
+     *
+     * @param name     directory name
+     * @param basePath directory path base
+     * @return logical directory node
+     * @throws IOException         if IOException occurred
+     * @throws NoRequirementsMeted if cant create a directory node
+     */
+    @Override
+    public DirectoryNodeDto createLogicalNode(String name, String basePath) throws IOException, NoRequirementsMeted {
+        DirectoryNodeDto directoryNode = this.createDirectory(name, basePath);
+
+        // Could be already created
+        if (directoryNode == null) {
+            directoryNode = this.findDirectoryByBasePath(name, basePath);
+        }
+
+        // could be integrity problems
+        if (directoryNode == null) {
+            throw new NoRequirementsMeted("Unable to create necessary node");
+        }
+
+        return directoryNode;
     }
 }

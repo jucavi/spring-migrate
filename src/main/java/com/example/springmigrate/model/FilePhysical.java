@@ -7,8 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -53,6 +51,7 @@ public class FilePhysical {
         return !extension.isBlank();
     }
 
+    @NotNull
     private Path getFileNamePath() {
         return Paths.get(this.getFileName());
     }

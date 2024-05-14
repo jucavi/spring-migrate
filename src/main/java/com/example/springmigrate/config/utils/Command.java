@@ -2,6 +2,7 @@ package com.example.springmigrate.config.utils;
 
 import com.example.springmigrate.service.implementation.MigratePhysicalDataService;
 import com.example.springmigrate.service.implementation.MigrateUnixService;
+import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -14,9 +15,11 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
+
 @Component
 @CommandLine.Command(name = "Migrate", mixinStandardHelpOptions = true, version = "1.0",
         description = "Migrate CLI")
+@Log4j2
 public class Command implements Runnable {
 
     private final MigratePhysicalDataService normalMigrate;
@@ -48,14 +51,19 @@ public class Command implements Runnable {
 
         userWarningMessage();
 
-        String root = getRoot();
+        String root = getRootDrive();
         // Bean creation to inject in Config#Retrofit
         new ApiUrl(url);
         List<Path> paths = Arrays.stream(directories).map(Paths::get).collect(Collectors.toList());
+
         try {
             if (custom) {
                 // Unix like
-                customMigrate.migrate(root, foundDirectoryName, notFoundDirectoryName, paths);
+                customMigrate.migrate(
+                        root.toLowerCase(),
+                        foundDirectoryName.toLowerCase(),
+                        notFoundDirectoryName.toLowerCase(),
+                        paths);
 
             } else {
 
@@ -63,12 +71,12 @@ public class Command implements Runnable {
                 normalMigrate.migrate(paths);
             }
 
-        } catch (IOException e) {
-            System.out.println("Error");
+        } catch (IOException ex) {
+            log.error("Unexpected error: {}", ex.getMessage());
         }
     }
 
-    private static @NotNull String getRoot() {
+    private static @NotNull String getRootDrive() {
         String root = "/";
         try {
             root = Paths.get(System.getProperty("user.dir"))
@@ -102,10 +110,10 @@ public class Command implements Runnable {
                 "\n***********************************************************************************" +
                 "\n\nAún así desea ejecutar la aplicación S/n: ");
 
-        Scanner sc =new Scanner(System.in);
+        Scanner sc = new Scanner(System.in);
         String input = sc.nextLine();
 
-        if (!input.equalsIgnoreCase("s") ) {
+        if (!input.equalsIgnoreCase("s")) {
             System.exit(0);
         }
     }

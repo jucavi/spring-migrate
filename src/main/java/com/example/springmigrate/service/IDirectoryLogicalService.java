@@ -1,5 +1,6 @@
 package com.example.springmigrate.service;
 
+import com.example.springmigrate.config.utils.error.NoRequirementsMeted;
 import com.example.springmigrate.dto.DirectoryFilterNodeDto;
 import com.example.springmigrate.dto.DirectoryNodeDto;
 
@@ -29,4 +30,6 @@ public interface IDirectoryLogicalService {
     void deleteDirectoryById(String id) throws IOException;
 
     List<DirectoryNodeDto> findChildrenDirectories(String parentId) throws IOException;
+
+    DirectoryNodeDto createLogicalNode(String name, String basePath) throws IOException, NoRequirementsMeted;
 }
