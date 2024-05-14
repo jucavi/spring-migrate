@@ -14,8 +14,6 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.FileFilter;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
@@ -74,10 +72,10 @@ public class MigrateUnixService {
         deleteDirectories();
 
         // Show statistics
-        resume(directories);
+        showResume(directories);
     }
 
-    private void resume(List<Path> directories) {
+    private void showResume(List<Path> directories) {
 
         File file = new File(unixRoot.getDirectory().getFullPath());
         int foundedFiles = Objects.requireNonNull(file.listFiles(File::isFile)).length;
@@ -85,21 +83,27 @@ public class MigrateUnixService {
         file = new File(unixDirectoryNotFoundInDatabase.getFullPath());
         int notFoundedFiles = Objects.requireNonNull(file.listFiles(File::isFile)).length;
 
-        log.info("After Migrate");
+        log.info("*******************************************************");
+        log.info("*******************************************************");
+        log.info("                After Migrate Operation");
+        log.info("*******************************************************");
+        log.info("*******************************************************");
         for (Path directory : directories) {
             try (Stream<Path> files = Files.walk(directory).parallel().filter(p -> p.toFile().isFile())) {
                 long numFiles = files.count();
+                log.info("*******************  Source  **************************");
                 log.info("Total files remaining in {}: {}", directory, numFiles);
-
             } catch (IOException ex) {
                 //
             }
         }
 
+        log.info("*******************  Target  **************************");
         log.info("Total files processed: {}", foundedFiles + notFoundedFiles);
-        log.info("Founded files in database(/old): {}", foundedFiles);
-        log.info("Missing files in databases(/notfound/database): {}", notFoundedFiles);
-
+        log.info("*******************************************************");
+        log.info("Founded files in (/old): {}", foundedFiles);
+        log.info("Missing files in (/notfound/database): {}", notFoundedFiles);
+        log.info("*******************************************************");
     }
 
     /**
