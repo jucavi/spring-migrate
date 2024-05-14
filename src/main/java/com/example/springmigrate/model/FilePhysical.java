@@ -25,9 +25,9 @@ public class FilePhysical {
     /**
      * Constructor
      *
-     * @param name file name without extension
+     * @param name      file name without extension
      * @param extension extension
-     * @param filePath absolute path
+     * @param filePath  absolute path
      */
     public FilePhysical(@NotNull String name, @NotNull String extension, @NotNull Path filePath) {
         this.name = name;

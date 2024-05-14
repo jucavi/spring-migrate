@@ -21,7 +21,7 @@ public class FileTypeLogicalServiceImpl implements IFileTypeLogicalService {
     public Map<String, String> findAllFileTypes() throws IOException {
 
         Map<String, String> result = new HashMap<>();
-        List<FileTypeNodeDto> response =  repository.findAll();
+        List<FileTypeNodeDto> response = repository.findAll();
 
         if (response != null) {
             response.forEach(c -> result.put(c.getMimeType(), c.getExtension()));

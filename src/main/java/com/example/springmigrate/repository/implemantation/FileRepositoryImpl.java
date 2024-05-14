@@ -23,7 +23,7 @@ public class FileRepositoryImpl implements IFileRepository {
      */
     @Override
     public List<FileNodeDto> findAll() throws IOException {
-        return  fileHttpClient.apiFindFiles();
+        return fileHttpClient.apiFindFiles();
     }
 
     @Override

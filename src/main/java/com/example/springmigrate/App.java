@@ -13,23 +13,22 @@ import picocli.CommandLine;
 @SpringBootApplication
 public class App implements CommandLineRunner {
 
-	Command command;
-	MigratePhysicalDataService normalMigrate;
-	MigrateUnixService customMigrate;
+    Command command;
+    MigratePhysicalDataService normalMigrate;
+    MigrateUnixService customMigrate;
 
-	public App(MigratePhysicalDataService normalMigrate, MigrateUnixService customMigrate) {
-		this.normalMigrate = normalMigrate;
-		this.customMigrate = customMigrate;
-		this.command = new Command(normalMigrate, customMigrate);
-	}
+    public App(MigratePhysicalDataService normalMigrate, MigrateUnixService customMigrate) {
+        this.normalMigrate = normalMigrate;
+        this.customMigrate = customMigrate;
+        this.command = new Command(normalMigrate, customMigrate);
+    }
 
-	public static void main(String[] args) {
-		SpringApplication.run(App.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(App.class, args);
+    }
 
-
-	@Override
-	public void run(String... args) {
-		CommandLine.run(command, args);
-	}
+    @Override
+    public void run(String... args) {
+        CommandLine.run(command, args);
+    }
 }

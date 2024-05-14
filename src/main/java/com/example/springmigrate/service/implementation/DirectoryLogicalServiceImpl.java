@@ -31,11 +31,10 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
         return repository.findAll();
     }
 
-
     /**
      * Creates directory
      *
-     * @param name directory name
+     * @param name     directory name
      * @param pathBase absolute parent path
      * @return directory created
      */
@@ -82,7 +81,6 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
         repository.deleteDirectoryHard(id);
     }
 
-
     /**
      * Deletes directory(Soft)
      *
@@ -93,7 +91,6 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
     public void deleteDirectoryById(String id) throws IOException {
         repository.deleteDirectory(id);
     }
-
 
     /**
      * Find directory by identifier
@@ -107,11 +104,10 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
         return repository.findDirectoryById(id);
     }
 
-
     /**
      * Find directory by name and parent ID
      *
-     * @param name directory name
+     * @param name     directory name
      * @param parentId parent identifier
      * @return directory if exists, otherwise {@code null}
      * @throws IOException if I/O error occurred
@@ -132,11 +128,10 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
         return repository.findDirectoryByFilter(filter);
     }
 
-
     /**
      * Find directory by name and base path
      *
-     * @param name directory name
+     * @param name     directory name
      * @param basePath base path
      * @return directory if exists, otherwise {@code null}
      * @throws IOException if I/O error occurred
@@ -168,7 +163,6 @@ public class DirectoryLogicalServiceImpl implements IDirectoryLogicalService {
 
         return result;
     }
-
 
     /**
      * Create directory
