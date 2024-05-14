@@ -8,6 +8,7 @@ import com.example.springmigrate.model.DirectoryPhysical;
 import com.example.springmigrate.model.FilePhysical;
 import com.example.springmigrate.service.IDirectoryLogicalService;
 import com.example.springmigrate.service.IFileLogicalService;
+import com.example.springmigrate.service.IFileTypeLogicalService;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
@@ -26,23 +27,26 @@ public class MigratePhysicalDataService {
 
     private final IDirectoryLogicalService directoryLogicalService;
     private final IFileLogicalService fileLogicalService;
-    private final FileTypeMappingService typeMappingService;
+    private final IFileTypeLogicalService fileTypeService;
+
+    private final Map<String, String> mimeTypes;
 
     /**
      * Constructor
      *
      * @param directoryLogicalService directory service
      * @param fileLogicalService      file service
-     * @param typeMappingService      file type service
+     * @param fileTypeService         file type service
      */
     public MigratePhysicalDataService(
             IDirectoryLogicalService directoryLogicalService,
             IFileLogicalService fileLogicalService,
-            FileTypeMappingService typeMappingService) {
+            IFileTypeLogicalService fileTypeService) throws IOException {
 
         this.directoryLogicalService = directoryLogicalService;
         this.fileLogicalService = fileLogicalService;
-        this.typeMappingService = typeMappingService;
+        this.fileTypeService = fileTypeService;
+        this.mimeTypes = fileTypeService.findAllFileTypes();
     }
 
     /**
@@ -114,7 +118,7 @@ public class MigratePhysicalDataService {
      * File process logic
      *
      * @param filePhysicalUUID File with uuid name
-     * @throws IOException if IOException occurred
+     * @throws IOException              if IOException occurred
      * @throws IllegalArgumentException if IllegalArgument occurred
      */
     private void fileProcessLogic(@NotNull FilePhysical filePhysicalUUID) throws IOException, IllegalArgumentException {
@@ -149,7 +153,7 @@ public class MigratePhysicalDataService {
      * Always after update move physical files to database base url to keep integrity
      *
      * @param filePhysicalUUID physical file with uuid as filename
-     * @param parentLogical logical parent directory extracted from physical route
+     * @param parentLogical    logical parent directory extracted from physical route
      * @throws IOException I/O exception during service call
      */
     private void migrateData(@NotNull FilePhysical filePhysicalUUID, @NotNull DirectoryNodeDto parentLogical) throws IOException, IllegalArgumentException {
@@ -207,7 +211,7 @@ public class MigratePhysicalDataService {
      * Create physical directory with correct extensión from database record
      *
      * @param fileDto file dto
-     * @param  file file with dto uuid as name
+     * @param file    file with dto uuid as name
      * @return physical file representation
      */
     @NotNull
@@ -216,7 +220,7 @@ public class MigratePhysicalDataService {
         String filename = fileDto.getName();
         String mimeType = fileDto.getMimeType();
         // Could raise NullPointerException, ClassCastException but dtos have valid mimetypes
-        String extension = typeMappingService.getFileExtension(mimeType);
+        String extension = mimeTypes.get(mimeType);
 
         if (filename.endsWith(extension)) {
             int index = filename.lastIndexOf(".");
@@ -421,14 +425,14 @@ public class MigratePhysicalDataService {
      *     </li>
      *     <li>returns /d3
      *     </li>
-     *
+     * <p>
      *     if /parent == null; then update root's parent pointer to first node created
      * </ul>
      *
-     * @param parent parent directory
-     * @param path relative path
+     * @param parent    parent directory
+     * @param path      relative path
      * @param complexId identifier of complex directory name
-     * @param index index of sub-path
+     * @param index     index of sub-path
      * @return last directory created
      * @throws IOException if I/O error
      */
@@ -461,8 +465,8 @@ public class MigratePhysicalDataService {
     /**
      * Creates directory
      *
-     * @param parent candidate parent directory
-     * @param name directory name
+     * @param parent   candidate parent directory
+     * @param name     directory name
      * @param pathBase absolute parent path
      * @return directory created
      * @throws IOException if I/O error

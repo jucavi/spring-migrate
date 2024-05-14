@@ -6,6 +6,7 @@ import com.example.springmigrate.model.DirectoryPhysical;
 import com.example.springmigrate.model.FilePhysical;
 import com.example.springmigrate.service.IDirectoryLogicalService;
 import com.example.springmigrate.service.IFileLogicalService;
+import com.example.springmigrate.service.IFileTypeLogicalService;
 import com.example.springmigrate.service.IRootDirectoryService;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.Contract;
@@ -26,12 +27,13 @@ public class MigrateUnixService {
 
     private final IDirectoryLogicalService directoryLogicalService;
     private final IFileLogicalService fileLogicalService;
-    private final FileTypeMappingService typeMappingService;
+    private final IFileTypeLogicalService fileTypeService;
     private final IRootDirectoryService rootDirectoryService;
 
-    private PhysicalLogicalDirectoryDto unixRoot;
-    private DirectoryNodeDto directoryNotFoundLogical;
-    private DirectoryPhysical unixDirectoryNotFoundInDatabase;
+    private final Map<String, String> mimeTypes;
+    private PhysicalLogicalDirectoryDto physicalLogicalRoot;
+    private DirectoryNodeDto nodeNotFound;
+    private DirectoryPhysical directoryNotFoundInDatabase;
     private List<DirectoryNodeDto> unlinkedDirectories;
     private List<FileNodeDto> unlinkedFiles;
 
@@ -40,18 +42,19 @@ public class MigrateUnixService {
      *
      * @param directoryLogicalService directory service
      * @param fileLogicalService      file service
-     * @param typeMappingService      file type service
+     * @param fileTypeLogicalService      file type service
      */
     public MigrateUnixService(
             IDirectoryLogicalService directoryLogicalService,
             IFileLogicalService fileLogicalService,
-            FileTypeMappingService typeMappingService,
-            IRootDirectoryService rootDirectoryService) {
+            IFileTypeLogicalService fileTypeLogicalService,
+            IRootDirectoryService rootDirectoryService) throws IOException {
 
         this.directoryLogicalService = directoryLogicalService;
         this.fileLogicalService = fileLogicalService;
-        this.typeMappingService = typeMappingService;
+        this.fileTypeService = fileTypeLogicalService;
         this.rootDirectoryService = rootDirectoryService;
+        this.mimeTypes = this.fileTypeService.findAllFileTypes();
     }
 
     /**
@@ -287,9 +290,7 @@ public class MigrateUnixService {
         //      nodeName with extension (name.pdf)
         //      fullNodeName name with extension (name.pdf)
         //      fullNodeName name with extension, with extension (name.pdf.pdf)
-        String fullNodeName = nodeName.concat(
-                        typeMappingService.getFileExtension(dto.getMimeType()))
-                .toLowerCase();
+        String fullNodeName = nodeName.concat(mimeTypes.get(dto.getMimeType())).toLowerCase();
 
         boolean alreadyProcessed = dto.getParentDirectoryId().equals(unixRoot.getNode().getId())
                 || dto.getParentDirectoryId().equals(directoryNotFoundLogical.getId());
@@ -347,10 +348,7 @@ public class MigrateUnixService {
         // Try set extension
         if (!filePhysical.isFullNameWithExtension()) {
             try {
-                physicalName = filePhysical.getName()
-                        .toLowerCase()
-                        .concat(".")
-                        .concat(typeMappingService.getFileExtension(mimeType));
+                physicalName = filePhysical.getName().toLowerCase().concat(".").concat(mimeTypes.get(mimeType));
             } catch (NullPointerException | ClassCastException ex) {
                 //
             }
@@ -617,7 +615,7 @@ public class MigrateUnixService {
         String filename = fileDto.getName();
         String mimeType = fileDto.getMimeType();
         // Could raise NullPointerException
-        String extension = typeMappingService.getFileExtension(mimeType);
+        String extension = mimeTypes.get(mimeType);
 
         if (filename.endsWith(extension)) {
             int index = filename.lastIndexOf(".");
