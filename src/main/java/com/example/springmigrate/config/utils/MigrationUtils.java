@@ -5,6 +5,7 @@ import com.example.springmigrate.dto.FileNodeDto;
 import com.example.springmigrate.model.DirectoryPhysical;
 import com.example.springmigrate.model.FilePhysical;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -313,5 +314,27 @@ public class MigrationUtils {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Delete all physical directory structure after migrate if all files was processed
+     *
+     * @param sourceDirectories list of directories
+     */
+    public static void cleanPhysicalSourceDirectories(@NotNull List<Path> sourceDirectories) {
+        for (Path directory : sourceDirectories) {
+            long count = fileCount(directory);
+
+            if (count == 0) {
+                try {
+                    FileUtils.deleteDirectory(new File(directory.toString()));
+                    log.info("Delete after migrate: {}", directory);
+                } catch (IOException e) {
+                    log.warn("Unable to delete: {}", directory);
+                }
+            } else {
+                log.warn("Check directory content, not all data was migrated: {}", directory);
+            }
+        }
     }
 }

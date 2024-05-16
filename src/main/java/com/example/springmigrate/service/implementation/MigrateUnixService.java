@@ -75,10 +75,12 @@ public class MigrateUnixService {
         log.info("Deleting Directories...");
         deleteDirectories();
 
-        // TODO: clean physical directories
-
         // Show statistics
         MigrationUtils.showResume(physicalLogicalRoot.getDirectory(), directoryNotFoundInDatabase, directories);
+
+        // clean source directories structure after migrate
+        log.info("Clean empty data source directories...");
+        MigrationUtils.cleanPhysicalSourceDirectories(directories);
     }
 
     /**
