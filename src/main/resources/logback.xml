@@ -47,10 +47,11 @@
 
 	<logger name="org.springframework" level="WARN" />
 	<logger name="ch.qos.logback.classic" level="WARN" />
+	<logger name="ch.qos.logback" level="OFF" additivity="false" />
 
 	<root level="INFO">
-<!-- 		<appender-ref ref="File" /> -->
 		<appender-ref ref="Console" />
 		<appender-ref ref="File" />
 	</root>
+
 </configuration>
