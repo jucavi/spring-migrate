@@ -1,8 +1,6 @@
 package com.example.springmigrate.config.utils;
 
 import com.example.springmigrate.config.utils.error.NoRequirementsMeted;
-import com.example.springmigrate.config.utils.error.NodeAlreadyProcessed;
-import com.example.springmigrate.dto.DirectoryNodeDto;
 import com.example.springmigrate.dto.FileNodeDto;
 import com.example.springmigrate.model.DirectoryPhysical;
 import com.example.springmigrate.model.FilePhysical;
@@ -15,34 +13,106 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Log4j2
 public class MigrationUtils {
 
     /**
+     * Move all directory content to destiny directory
+     *
+     * @param srcPath source directory
+     * @param dstPath destination directory
+     * @throws IOException if IOException occurred
+     */
+    public static void copyDirectoryContentTo(@NotNull Path srcPath, Path dstPath) throws IOException {
+        // (Is folder) for base recursive implementation
+        if (!Files.exists(dstPath)) {
+            // different folders: RENAME
+            Files.move(srcPath, dstPath);
+
+        } else {
+            // same folders, one of them already renamed
+            for (Path child : MigrationUtils.getPathList(srcPath)) {
+
+                if (Files.isRegularFile(child)) {
+                    try {
+                        Path p = Paths.get(dstPath.toString(), child.getFileName().toString());
+                        // copy if not exists
+                        if (!Files.exists(p)) {
+                            Files.copy(child, p);
+                        }
+
+                        // delete file after copy from source only if folder was renamed
+                        if (!p.equals(child)) {
+                            Files.delete(child);
+                        }
+
+                    } catch (IOException ex) {
+                        log.error("Something fishy: {}", ex.getMessage());
+                    }
+                }
+            }
+
+            // Delete empty source directory
+            Files.delete(srcPath);
+        }
+    }
+
+    /**
+     * Returns the number of files inside a directory
+     *
+     * @param directoryPath directory path
+     * @return number of files
+     */
+    public static long fileCount(Path directoryPath) {
+        try (Stream<Path> files = Files.walk(directoryPath)
+                .parallel()
+                .filter(p -> p.toFile().isFile())) {
+
+            return files.count();
+
+        } catch (IOException ex) {
+            return -1;
+        }
+    }
+
+
+    /**
+     * Returns a list of paths denoting the files in the directory
+     *
+     * @param directoryPath directory path
+     * @return list of paths denoting the files in the directory
+     */
+    @NotNull
+    public static List<Path> getPathList(Path directoryPath) {
+
+        if (!Files.isDirectory(directoryPath)) {
+            return new ArrayList<>();
+        }
+
+        return Arrays.stream(
+                        Objects.requireNonNull(
+                                new File(directoryPath.toString())
+                                        .listFiles()))
+                .map(file -> Paths.get(file.getAbsolutePath()))
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Check if physical and logical representations have same name and same parent directory
      *
      * @param dto          logical file node
      * @param filePhysical physical file
-     * @param foundNode    logical node where the files that have been migrated are stored
-     * @param notFoundNode logical node where the files that have not been migrated because they do not have a
-     *                     physical representation are stored
      * @param mimeTypes    map of mime types
      * @return {@code true} if the names and parents match, otherwise {@code false}
-     * @throws IOException          if I/O exception occurred
-     * @throws NodeAlreadyProcessed if the file has already been migrated
      */
     public static boolean isLogicalRepresentationOfDirectory(
             @NotNull FileNodeDto dto,
             FilePhysical filePhysical,
-            @NotNull DirectoryNodeDto foundNode,
-            DirectoryNodeDto notFoundNode,
-            Map<String, String> mimeTypes) throws IOException {
+            Map<String, String> mimeTypes)  {
 
         // add extension from metadata
         String physicalName = setFileNameWithExtension(filePhysical, mimeTypes);
@@ -55,13 +125,7 @@ public class MigrationUtils {
               fullNodeName name with duplicate extension (name.pdf.pdf)
          */
         String fullNodeName = nodeName.concat(mimeTypes.get(dto.getMimeType())).toLowerCase();
-        boolean isProcessed = dto.getParentDirectoryId().equals(foundNode.getId())
-                || dto.getParentDirectoryId().equals(notFoundNode.getId());
-
-        if (isProcessed) {
-            throw new NodeAlreadyProcessed("Node already processed.");
-        }
-
+        //physicalName.matches("^\\d{3}-");
         boolean isEqualName = (physicalName.equals(nodeName) || physicalName.equals(fullNodeName));
 
         // normalize path bases (api response -> pathBase='opttoolstomcatlatest/Documents/1/VT')
@@ -101,15 +165,14 @@ public class MigrationUtils {
      * @param filePhysical physical file object
      * @param mimeTypes    available mapping of mime types(mimetype, extension)
      * @return filename with extension
-     * @throws IOException if I/O exception occurred
      */
     public static String setFileNameWithExtension(
             @NotNull FilePhysical filePhysical,
-            @NotNull Map<String, String> mimeTypes) throws IOException {
+            @NotNull Map<String, String> mimeTypes) {
 
         String physicalName = filePhysical.getName();
         // get mimetype from metadata
-        String mimeType = Files.probeContentType(filePhysical.getAbsolutePath());
+        String mimeType = filePhysical.getMimeType();
 
         // Try set extension
         if (!filePhysical.isFullNameWithExtension()) {
@@ -189,7 +252,7 @@ public class MigrationUtils {
      */
     @NotNull
     @Contract("_ -> new")
-    public static DirectoryPhysical createDirectoryPhysical(@NotNull Path directoryPath) throws NoRequirementsMeted, IOException {
+    public static DirectoryPhysical createDirectoryPhysical(@NotNull Path directoryPath) throws NoRequirementsMeted {
         // Attempt to create the directory
         try {
             if (!Files.exists(directoryPath)) {
@@ -223,16 +286,7 @@ public class MigrationUtils {
         log.info("*******************************************************");
         log.info("*******************  Source  **************************");
         for (Path directory : sourceDirectories) {
-            try (Stream<Path> files = Files.walk(directory)
-                    .parallel()
-                    .filter(p -> p.toFile().isFile())) {
-
-                long numFiles = files.count();
-                log.info("Total files remaining in {}: {}", directory, numFiles);
-
-            } catch (IOException ex) {
-                //
-            }
+            log.info("Total files remaining in {}: {}", directory, fileCount(directory));
         }
 
         log.info("*******************************************************");

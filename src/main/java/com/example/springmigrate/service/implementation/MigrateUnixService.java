@@ -2,7 +2,6 @@ package com.example.springmigrate.service.implementation;
 
 import com.example.springmigrate.config.utils.MigrationUtils;
 import com.example.springmigrate.config.utils.error.NoRequirementsMeted;
-import com.example.springmigrate.config.utils.error.NodeAlreadyProcessed;
 import com.example.springmigrate.dto.DirectoryNodeDto;
 import com.example.springmigrate.dto.FileNodeDto;
 import com.example.springmigrate.dto.PhysicalLogicalDirectoryDto;
@@ -17,13 +16,9 @@ import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Log4j2
@@ -80,9 +75,7 @@ public class MigrateUnixService {
         log.info("Deleting Directories...");
         deleteDirectories();
 
-        // check migration status
-
-        // clean physical
+        // TODO: clean physical directories
 
         // Show statistics
         MigrationUtils.showResume(physicalLogicalRoot.getDirectory(), directoryNotFoundInDatabase, directories);
@@ -165,8 +158,60 @@ public class MigrateUnixService {
     private void runMigrations(@NotNull List<Path> directories) {
 
         for (Path directory : directories) {
+
+            resolveDirectoryNames(directory);
+
             log.info("Working on {}, migrating files...", directory);
             migrate(directory);
+        }
+    }
+
+
+    /**
+     * Rename all directories with uuid names
+     *
+     * @param srcPath source directory path
+     */
+    private void resolveDirectoryNames(@NotNull Path srcPath) {
+
+
+        // only folders(nodes)
+        if (Files.isRegularFile(srcPath)) {
+            return;
+        }
+
+        String uuid = srcPath.getFileName().toString();
+        // we need to change to database stored name if exists
+        String retrievedName = uuid;
+
+        // find its name in database
+        try {
+            DirectoryNodeDto directoryNode = directoryLogicalService.findDirectoryById(uuid);
+            // founded in database
+            if (directoryNode != null) {
+                retrievedName = directoryNode.getName();
+            }
+
+        } catch (IOException ex) {
+            // retrievedName = uuid;
+        }
+
+        // check for directory children content
+        for (Path child : MigrationUtils.getPathList(srcPath)) {
+            // new call for child directory
+            if (Files.isDirectory(child)) {
+                resolveDirectoryNames(child);
+            }
+        }
+
+        // removes all '/' characters and create a valid simple name for complex name directory node
+        Path dstPath = srcPath.resolveSibling(retrievedName.replace("/", ""));
+
+        try {
+
+            MigrationUtils.copyDirectoryContentTo(srcPath, dstPath);
+        } catch (Exception ex) {
+            //
         }
     }
 
@@ -179,7 +224,7 @@ public class MigrateUnixService {
      */
     private void migrate(Path directoryPath) {
 
-        for (Path path : getPathList(directoryPath)) {
+        for (Path path : MigrationUtils.getPathList(directoryPath)) {
 
             FilePhysical filePhysicalUUID = FilePhysical
                     .builder()
@@ -209,7 +254,6 @@ public class MigrateUnixService {
 
 
             } else { // FOLDERS LOGIC
-                // recursive call
                 migrate(path);
             }
         }
@@ -231,13 +275,12 @@ public class MigrateUnixService {
                 for (FileNodeDto candidate : candidateFiles) {
 
                     // update logical and physical info if filenames match
-                    try {
+                    boolean isProcessed = candidate.getParentDirectoryId().equals(physicalLogicalRoot.getNode().getId())
+                            || candidate.getParentDirectoryId().equals(nodeNotFound.getId());
 
+                    if (!isProcessed) {
                         Boolean updated = updateNodeAndMoveToPhysicalPath(candidate, filePhysical);
                         if (updated) return;
-
-                    } catch (NodeAlreadyProcessed ex) {
-                        log.info("{}\n{}\n\t: {}", candidate, filePhysical, ex.getMessage());
                     }
                 }
             }
@@ -249,7 +292,7 @@ public class MigrateUnixService {
                     directoryNotFoundInDatabase);
 
         } catch (Exception ex) {
-            log.error("Error when try to migrate data by name: {}", ex.getMessage());
+            log.error("Error when trying to migrate data by name: {}", ex.getMessage());
         }
     }
 
@@ -260,17 +303,14 @@ public class MigrateUnixService {
      * @param filePhysical physical file object
      * @return {@code true} if match, {@code false} if not match,
      * {@code null} if node math but has been already updated
-     * @throws IOException          if I/O exception occurred
-     * @throws NodeAlreadyProcessed if node was already processed
+     * @throws IOException if I/O exception occurred
      */
-    private Boolean updateNodeAndMoveToPhysicalPath(@NotNull FileNodeDto dto, FilePhysical filePhysical) throws IOException, NodeAlreadyProcessed {
+    private Boolean updateNodeAndMoveToPhysicalPath(@NotNull FileNodeDto dto, FilePhysical filePhysical) throws IOException {
 
         Boolean isUpdated = Boolean.FALSE;
         boolean isFound = MigrationUtils.isLogicalRepresentationOfDirectory(
                 dto,
                 filePhysical,
-                physicalLogicalRoot.getNode(),
-                nodeNotFound,
                 mimeTypes
         );
 
@@ -399,22 +439,5 @@ public class MigrateUnixService {
         DirectoryPhysical directoryPhysical = MigrationUtils.createDirectoryPhysical(directoryPath);
 
         return new PhysicalLogicalDirectoryDto(directoryPhysical, directoryNode);
-    }
-
-
-    /**
-     * Returns a list of paths denoting the files in the directory
-     *
-     * @param directoryPath directory path
-     * @return list of paths denoting the files in the directory
-     */
-    @NotNull
-    private static List<Path> getPathList(Path directoryPath) {
-
-        if (!Files.isDirectory(directoryPath)) {
-            return new ArrayList<>();
-        }
-
-        return Arrays.stream(Objects.requireNonNull(new File(directoryPath.toString()).listFiles())).map(file -> Paths.get(file.getAbsolutePath())).collect(Collectors.toList());
     }
 }

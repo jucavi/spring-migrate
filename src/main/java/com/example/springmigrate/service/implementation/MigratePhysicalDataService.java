@@ -234,6 +234,7 @@ public class MigratePhysicalDataService {
     }
 
     /**
+     /**
      * Rename folder with UUID
      *
      * @param path directory path

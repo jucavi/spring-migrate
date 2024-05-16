@@ -27,4 +27,12 @@ public class FileNodeDto extends AbstractEntityDto {
     private Integer version;
     List<FileExportDto> fileExports;
 
+    @Override
+    public String toString() {
+        return "FileNodeDto{" +
+                "name='" + name + '\'' +
+                ", pathBase='" + pathBase + '\'' +
+                ", mimeType='" + mimeType + '\'' +
+                '}';
+    }
 }
