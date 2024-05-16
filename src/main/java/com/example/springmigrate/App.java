@@ -27,6 +27,7 @@ public class App implements CommandLineRunner {
         SpringApplication.run(App.class, args);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void run(String... args) {
         CommandLine.run(command, args);
