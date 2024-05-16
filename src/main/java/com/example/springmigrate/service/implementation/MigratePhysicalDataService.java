@@ -27,7 +27,6 @@ public class MigratePhysicalDataService {
 
     private final IDirectoryLogicalService directoryLogicalService;
     private final IFileLogicalService fileLogicalService;
-    private final IFileTypeLogicalService fileTypeService;
 
     private final Map<String, String> mimeTypes;
 
@@ -45,7 +44,6 @@ public class MigratePhysicalDataService {
 
         this.directoryLogicalService = directoryLogicalService;
         this.fileLogicalService = fileLogicalService;
-        this.fileTypeService = fileTypeService;
         this.mimeTypes = fileTypeService.findAllFileTypes();
     }
 
