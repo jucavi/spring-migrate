@@ -12,10 +12,9 @@ import java.util.List;
 
 @Repository
 @AllArgsConstructor
-public class DirectoryRepositoryImpl  implements IDirectoryRepository {
+public class DirectoryRepositoryImpl implements IDirectoryRepository {
 
     private final ApiDirectoryHttpClientImpl directoryHttpClient;
-
 
     /**
      * Find all directories
@@ -24,9 +23,8 @@ public class DirectoryRepositoryImpl  implements IDirectoryRepository {
      */
     @Override
     public List<DirectoryNodeDto> findAll() throws IOException {
-        return  directoryHttpClient.apiFindDirectories();
+        return directoryHttpClient.apiFindDirectories();
     }
-
 
     /**
      * Create directory, 409 if already exists
@@ -39,7 +37,6 @@ public class DirectoryRepositoryImpl  implements IDirectoryRepository {
         return directoryHttpClient.apiCreateDirectoryHierarchicallyLogical(directories);
     }
 
-
     /**
      * Find directory by uuid identifier
      *
@@ -50,7 +47,6 @@ public class DirectoryRepositoryImpl  implements IDirectoryRepository {
     public DirectoryNodeDto findDirectoryById(String uuid) throws IOException {
         return directoryHttpClient.apiFindDirectoryById(uuid);
     }
-
 
     /**
      * Update a directory
@@ -68,7 +64,6 @@ public class DirectoryRepositoryImpl  implements IDirectoryRepository {
         return directoryHttpClient.apiUpdateDirectory(directory);
     }
 
-
     /**
      * Find all directories by filter
      *
@@ -80,7 +75,6 @@ public class DirectoryRepositoryImpl  implements IDirectoryRepository {
         return directoryHttpClient.apiSearchAllDirectoriesByFilter(filter);
     }
 
-
     /**
      * Find first directory that mach with filter criteria
      *
@@ -91,7 +85,6 @@ public class DirectoryRepositoryImpl  implements IDirectoryRepository {
     public DirectoryNodeDto findDirectoryByFilter(DirectoryFilterNodeDto filter) throws IOException {
         return directoryHttpClient.apiSearchDirectoryByFilter(filter);
     }
-
 
     /**
      * Delete directory by identifier

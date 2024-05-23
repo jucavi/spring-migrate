@@ -10,10 +10,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DirectoryNodeDto extends AbstractEntityDto {
+public class RootNodeDto extends AbstractEntityDto {
 
     private Boolean active = true;
-    private String name;
-    private String parentDirectoryId;
     private String pathBase;
+    private DirectoryNodeDto directory;
 }

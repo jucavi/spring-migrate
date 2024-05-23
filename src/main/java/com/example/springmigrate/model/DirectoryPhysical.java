@@ -39,6 +39,14 @@ public class DirectoryPhysical {
      * Returns base path of a directory
      */
     public String getBasePath() {
-        return getParent().toString();
+        return getParent().getFullPath();
+    }
+
+
+    /**
+     * Returns the full path of a directory
+     */
+    public String getFullPath() {
+        return path.toString();
     }
 }

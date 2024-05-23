@@ -1,4 +1,4 @@
 package com.example.springmigrate.service;
 
-public interface IDirectoryPhisicalService {
+public interface IDirectoryPhysicalService {
 }

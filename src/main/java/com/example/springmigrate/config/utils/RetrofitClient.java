@@ -5,6 +5,7 @@ import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import java.net.ConnectException;
 import java.util.concurrent.TimeUnit;
 
 
@@ -14,12 +15,12 @@ public class RetrofitClient {
     private final ApiUrl apiUrl;
     private static Retrofit instance;
 
-    public Retrofit getInstance() {
+    public Retrofit getInstance() throws ConnectException {
         if (instance == null) {
             OkHttpClient.Builder httpClient = new OkHttpClient.Builder()
-                    .readTimeout(60, TimeUnit.SECONDS)
-                    .connectTimeout(60, TimeUnit.SECONDS)
-                    .writeTimeout(60, TimeUnit.SECONDS);
+                    .readTimeout(600, TimeUnit.SECONDS)
+                    .connectTimeout(600, TimeUnit.SECONDS)
+                    .writeTimeout(600, TimeUnit.SECONDS);
 
 
             instance = new Retrofit.Builder()

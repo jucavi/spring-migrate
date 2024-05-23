@@ -1,7 +1,9 @@
 package com.example.springmigrate.network.implementation;
 
 import com.example.springmigrate.config.utils.RetrofitClient;
+import com.example.springmigrate.dto.FileFilterDto;
 import com.example.springmigrate.dto.FileNodeDto;
+import com.example.springmigrate.dto.PaginatedListDto;
 import com.example.springmigrate.network.IFileHttpClient;
 import lombok.extern.log4j.Log4j2;
 import okhttp3.ResponseBody;
@@ -10,6 +12,8 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.net.ConnectException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -18,14 +22,14 @@ public class ApiFileHttpClientImpl {
 
     private final IFileHttpClient httpClient;
 
-    public ApiFileHttpClientImpl(RetrofitClient retrofitClient) {
+    public ApiFileHttpClientImpl(RetrofitClient retrofitClient) throws ConnectException {
         httpClient = retrofitClient.getInstance()
                 .create(IFileHttpClient.class);
     }
 
     public List<FileNodeDto> apiFindFiles() throws IOException {
 
-        Call<List<FileNodeDto>> call = httpClient.finFiles();
+        Call<List<FileNodeDto>> call = httpClient.findFiles();
         Response<List<FileNodeDto>> response = call.execute();
 
         //log.info("#apiFindTypes: {}", response.code());
@@ -34,6 +38,22 @@ public class ApiFileHttpClientImpl {
         }
 
         return response.body();
+    }
+
+    public List<FileNodeDto> apiFindFilesByFilter(FileFilterDto filter) throws IOException {
+
+        Call<PaginatedListDto<FileNodeDto>> call = httpClient.findFilesByFilter(filter);
+        Response<PaginatedListDto<FileNodeDto>> response = call.execute();
+
+        if (!response.isSuccessful()) {
+            return null;
+        }
+
+        if (response.body() == null) {
+            return new ArrayList<>();
+        }
+
+        return response.body().getResults();
     }
 
     public FileNodeDto apiCreateFile(FileNodeDto dto) throws IOException {
