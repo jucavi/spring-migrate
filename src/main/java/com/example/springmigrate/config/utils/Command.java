@@ -104,11 +104,12 @@ public class Command implements Runnable {
                 "\n***********************************************************************************" +
                 "\n***********************************************************************************" +
                 "\n   La ejecución de la aplicación puede producir daños en la base de datos." +
-                "\n   Antes de lanzar el script recuerde hacer una copia de seguridad de la base de   " +
-                "\n   datos y del sistema de archivos con el que se va a trabajar." +
-                "\n   Para ejecutar la aplicación son necesario permisos de administrador.             " +
+                "\n    * Antes de lanzar el script recuerde" +
+                "\n         - IMPORTANTE: Ejecutar con permisos de administrador.             " +
+                "\n         - Hacer una copia de seguridad de la base de datos.   " +
+                "\n         - Hacer una copia del sistema de archivos que se migrará." +
                 "\n***********************************************************************************" +
-                "\n\nAún así desea ejecutar la aplicación S/n: ");
+                "\n\nSeguro que desea ejecutar la aplicación s/n: ");
 
         Scanner sc = new Scanner(System.in);
         String input = sc.nextLine();

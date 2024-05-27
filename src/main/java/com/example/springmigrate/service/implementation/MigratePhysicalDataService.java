@@ -1,5 +1,6 @@
 package com.example.springmigrate.service.implementation;
 
+import com.example.springmigrate.config.utils.MigrationUtils;
 import com.example.springmigrate.dto.ContentDirectoryNodeDto;
 import com.example.springmigrate.dto.DirectoryFilterNodeDto;
 import com.example.springmigrate.dto.DirectoryNodeDto;
@@ -19,7 +20,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Log4j2
@@ -27,7 +27,6 @@ public class MigratePhysicalDataService {
 
     private final IDirectoryLogicalService directoryLogicalService;
     private final IFileLogicalService fileLogicalService;
-    private final IFileTypeLogicalService fileTypeService;
 
     private final Map<String, String> mimeTypes;
 
@@ -45,7 +44,6 @@ public class MigratePhysicalDataService {
 
         this.directoryLogicalService = directoryLogicalService;
         this.fileLogicalService = fileLogicalService;
-        this.fileTypeService = fileTypeService;
         this.mimeTypes = fileTypeService.findAllFileTypes();
     }
 
@@ -76,7 +74,7 @@ public class MigratePhysicalDataService {
     //TODO: RENAME EXISTING FOLDERS WITHOUT UUID NAME TO LOWER
     private void traverseAndMigrate(Path directoryPath) {
 
-        for (Path path : getPathList(directoryPath)) {
+        for (Path path : MigrationUtils.getPathList(directoryPath)) {
 
             FilePhysical filePhysicalUUID = FilePhysical
                     .builder()
@@ -104,7 +102,7 @@ public class MigratePhysicalDataService {
             } else { // FOLDERS LOGIC
 
                 // Valid UUID as name?, rename it from database.
-                if (isValidUUID(filePhysicalUUID.getName())) {
+                if (MigrationUtils.isValidUUID(filePhysicalUUID.getName())) {
                     path = renamePhysicalDirectoryNamedWithUUID(path);
                 }
 
@@ -135,7 +133,7 @@ public class MigratePhysicalDataService {
         if (parentLogical != null && parentLogical.getId() != null) {
 
             // Update physicalName
-            if (isValidUUID(filePhysicalUUID.getName())) {
+            if (MigrationUtils.isValidUUID(filePhysicalUUID.getName())) {
                 migrateData(filePhysicalUUID, parentLogical);
             } else {
                 log.info("Invalid UUID: {}", filePhysicalUUID.getName());
@@ -187,27 +185,6 @@ public class MigratePhysicalDataService {
     }
 
     /**
-     * Returns a list of paths denoting the files in the directory
-     *
-     * @param directoryPath directory path
-     * @return list of paths denoting the files in the directory
-     */
-    @NotNull
-    private static List<Path> getPathList(Path directoryPath) {
-
-        if (!Files.isDirectory(directoryPath)) {
-            return new ArrayList<>();
-        }
-
-        return Arrays.stream(
-                        Objects.requireNonNull(
-                                new File(directoryPath.toString()).listFiles()))
-                .map(file -> Paths.get(file.getAbsolutePath()))
-                .collect(Collectors.toList());
-    }
-
-
-    /**
      * Create physical directory with correct extensión from database record
      *
      * @param fileDto file dto
@@ -234,6 +211,7 @@ public class MigratePhysicalDataService {
     }
 
     /**
+     /**
      * Rename folder with UUID
      *
      * @param path directory path
@@ -290,23 +268,6 @@ public class MigratePhysicalDataService {
                 .build();
     }
 
-
-    /**
-     * Validate UUID
-     *
-     * @param name name
-     * @return {@code true} if element name is a valid UUID, {@code false} otherwise
-     */
-    @NotNull
-    private static Boolean isValidUUID(String name) {
-        try {
-            // for validation only
-            UUID.fromString(name);
-        } catch (IllegalArgumentException ex) {
-            return false;
-        }
-        return true;
-    }
 
     /**
      * Returns a list af leafs created

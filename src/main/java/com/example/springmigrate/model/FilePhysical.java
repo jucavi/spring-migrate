@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -29,7 +31,7 @@ public class FilePhysical {
      */
     public FilePhysical(@NotNull String name, @NotNull String extension, @NotNull Path filePath) {
         this.name = name;
-        this.extension = extension.startsWith(".") ? extension : ".".concat(extension);
+        this.extension = extension.startsWith(".") && !extension.equals(".") ? extension : ".".concat(extension);
         this.parentDirectory = new DirectoryPhysical(filePath.getParent());
     }
 
@@ -58,5 +60,18 @@ public class FilePhysical {
 
     public String getParentPath() {
         return this.parentDirectory.getFullPath();
+    }
+
+    /**
+     * Returns the mime type of file
+     */
+    public String getMimeType() {
+
+        try {
+            return Files.probeContentType(getAbsolutePath());
+        } catch (IOException e) {
+            return "";
+        }
+
     }
 }

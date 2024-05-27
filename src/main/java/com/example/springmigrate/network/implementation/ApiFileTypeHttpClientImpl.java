@@ -28,7 +28,7 @@ public class ApiFileTypeHttpClientImpl {
         Call<List<FileTypeNodeDto>> call = httpClient.finFileTypes();
         Response<List<FileTypeNodeDto>> response = call.execute();
 
-        log.info("#apiFindTypes: {}", response.code());
+//        log.info("#apiFindTypes: {}", response.code());
         if (!response.isSuccessful()) {
             return null;
         }
